@@ -128,6 +128,24 @@ jobs:
             build/coverage.txt
             build/coverage.lcov
 
+  # Install the package against the system Eigen (as package managers do) and
+  # consume it from a separate project with find_package(kalman).
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Eigen 3.4
+        run: sudo apt-get update && sudo apt-get install -y libeigen3-dev
+      - name: Configure without tests and without downloading Eigen
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DKALMAN_BUILD_TESTS=OFF -DKALMAN_BUILD_EXAMPLES=OFF -DKALMAN_FETCH_EIGEN=OFF
+      - name: Install
+        run: cmake --install build --prefix "$PWD/prefix"
+      - name: Build and run a consumer
+        run: |
+          cmake -S tests/install -B build-consumer -DCMAKE_PREFIX_PATH="$PWD/prefix"
+          cmake --build build-consumer
+          ./build-consumer/consumer
+
   # Comparison tests against OpenCV, the benchmark build, and the comparison
   # report (guide Steps 7-8). Published benchmark numbers come from a
   # dedicated machine (scripts/run_benchmarks.sh), not from shared runners.

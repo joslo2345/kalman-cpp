@@ -17,7 +17,8 @@ add_executable(unit_tests
     unit/test_diagnostics.cpp
     unit/test_vectors.cpp
     unit/test_small_cholesky.cpp
-    unit/test_sqrt_linear.cpp)
+    unit/test_sqrt_linear.cpp
+    unit/test_version.cpp)
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(unit_tests PRIVATE KALMAN_VECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/vectors")
 target_link_libraries(unit_tests PRIVATE kalman::kalman Catch2::Catch2WithMain)

@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
-project(kalman_cpp VERSION 0.1.0 LANGUAGES CXX)
+
+# The version lives in include/kalman/version.hpp.
+file(STRINGS include/kalman/version.hpp _kalman_version_defines REGEX "#define KALMAN_VERSION_(MAJOR|MINOR|PATCH) ")
+foreach(_part MAJOR MINOR PATCH)
+    string(REGEX MATCH "KALMAN_VERSION_${_part} ([0-9]+)" _ "${_kalman_version_defines}")
+    set(_kalman_version_${_part} ${CMAKE_MATCH_1})
+endforeach()
+project(kalman_cpp
+    VERSION ${_kalman_version_MAJOR}.${_kalman_version_MINOR}.${_kalman_version_PATCH}
+    DESCRIPTION "Header-only C++20 Kalman filters"
+    HOMEPAGE_URL "https://github.com/joslo2345/kalman-cpp"
+    LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -7,15 +18,36 @@ include(FetchContent)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
-set(EIGEN_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(Eigen3
-    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-    GIT_TAG 3.4.0
-    GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(Eigen3)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(KALMAN_TOP_LEVEL ON)
+else()
+    set(KALMAN_TOP_LEVEL OFF)
+endif()
+
+# Prefer an installed Eigen 3.4 (package managers provide one); download it
+# otherwise. Eigen 5's version rule rejects a 3.4 request, so an untested
+# major version is never picked up silently.
+option(KALMAN_FETCH_EIGEN "Download Eigen 3.4 if it is not installed" ON)
+# The user package registry is skipped: Eigen's own CMake registers every
+# build tree there, which would tie this build to some other build directory.
+find_package(Eigen3 3.4 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
+if(Eigen3_FOUND)
+    message(STATUS "kalman-cpp: using installed Eigen ${Eigen3_VERSION}")
+elseif(KALMAN_FETCH_EIGEN)
+    message(STATUS "kalman-cpp: downloading Eigen 3.4.0")
+    set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)  # don't let Eigen register this build tree
+    set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
+    set(EIGEN_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(Eigen3
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG 3.4.0
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(Eigen3)
+else()
+    message(FATAL_ERROR "kalman-cpp needs Eigen 3.4: install it or set KALMAN_FETCH_EIGEN=ON")
+endif()
 
 add_library(kalman INTERFACE)
 add_library(kalman::kalman ALIAS kalman)
@@ -46,7 +78,7 @@ export(EXPORT kalmanTargets
     NAMESPACE kalman::
     FILE ${CMAKE_CURRENT_BINARY_DIR}/kalmanTargets.cmake)
 
-option(KALMAN_BUILD_TESTS "Build tests" ON)
+option(KALMAN_BUILD_TESTS "Build tests" ${KALMAN_TOP_LEVEL})
 option(KALMAN_WARNINGS_AS_ERRORS "Treat compiler warnings in tests and benchmarks as errors" OFF)
 option(KALMAN_SANITIZE "Build tests with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(KALMAN_COVERAGE "Build tests with coverage instrumentation" OFF)
@@ -82,11 +114,6 @@ function(kalman_configure_target target)
         endif()
     endif()
 endfunction()
-if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-    set(KALMAN_TOP_LEVEL ON)
-else()
-    set(KALMAN_TOP_LEVEL OFF)
-endif()
 option(KALMAN_BUILD_EXAMPLES "Build the examples" ${KALMAN_TOP_LEVEL})
 option(KALMAN_BUILD_DOCS "Build the API reference with Doxygen (target: docs)" OFF)
 option(KALMAN_BUILD_BENCH "Build benchmarks (needs OpenCV and the mherb/kalman submodule)" OFF)

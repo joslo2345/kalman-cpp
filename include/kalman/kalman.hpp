@@ -13,3 +13,4 @@
 #include "kalman/sqrt_linear_filter.hpp"
 #include "kalman/sqrt_ukf.hpp"
 #include "kalman/ukf.hpp"
+#include "kalman/version.hpp"
