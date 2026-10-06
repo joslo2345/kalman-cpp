@@ -27,6 +27,26 @@ Eigen::Matrix<Scalar, K, 1> sample(std::mt19937& rng, const Eigen::Matrix<Scalar
     return Eigen::LLT<Eigen::Matrix<Scalar, K, K>>(cov).matrixL() * w;
 }
 
+inline Eigen::Matrix4d cv_transition(double dt) {
+    Eigen::Matrix4d F = Eigen::Matrix4d::Identity();
+    F(0, 2) = dt;
+    F(1, 3) = dt;
+    return F;
+}
+
+// Discrete white-noise acceleration model for state [px, py, vx, vy].
+inline Eigen::Matrix4d cv_process_noise(double dt, double accel_sigma) {
+    const double q = accel_sigma * accel_sigma;
+    const double dt2 = dt * dt, dt3 = dt2 * dt / 2, dt4 = dt2 * dt2 / 4;
+    Eigen::Matrix4d Q = Eigen::Matrix4d::Zero();
+    for (int a = 0; a < 2; ++a) {
+        Q(a, a) = dt4 * q;
+        Q(a, a + 2) = Q(a + 2, a) = dt3 * q;
+        Q(a + 2, a + 2) = dt2 * q;
+    }
+    return Q;
+}
+
 // 2D constant-velocity target, state [px, py, vx, vy], position measurements.
 // Note: std::normal_distribution is implementation-defined, so the exact samples
 // differ between standard libraries. Cross-library comparisons must use the
@@ -34,19 +54,8 @@ Eigen::Matrix<Scalar, K, 1> sample(std::mt19937& rng, const Eigen::Matrix<Scalar
 inline LinearScenario<4, 2> constant_velocity_2d(int steps, unsigned seed, double dt = 0.1,
                                                  double accel_sigma = 0.5, double meas_sigma = 1.0) {
     LinearScenario<4, 2> sc;
-    sc.F.setIdentity();
-    sc.F(0, 2) = dt;
-    sc.F(1, 3) = dt;
-
-    // Discrete white-noise acceleration model.
-    const double q = accel_sigma * accel_sigma;
-    const double dt2 = dt * dt, dt3 = dt2 * dt / 2, dt4 = dt2 * dt2 / 4;
-    sc.Q.setZero();
-    for (int a = 0; a < 2; ++a) {
-        sc.Q(a, a) = dt4 * q;
-        sc.Q(a, a + 2) = sc.Q(a + 2, a) = dt3 * q;
-        sc.Q(a + 2, a + 2) = dt2 * q;
-    }
+    sc.F = cv_transition(dt);
+    sc.Q = cv_process_noise(dt, accel_sigma);
 
     sc.H.setZero();
     sc.H(0, 0) = sc.H(1, 1) = 1.0;

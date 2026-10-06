@@ -5,10 +5,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current state
 
 Done so far:
-- the guide's Steps 1–3: the git repo, the directory layout, the CMake build with install/export rules, and the Catch2 test target
-- Step 6.1: `LinearFilter<N, M, Scalar>` with a Joseph-form update, an LLT solve instead of a matrix inverse, and NIS. `update()` returns `false` if the innovation covariance S isn't positive-definite.
+- Steps 1–3: the repo scaffold, the CMake build, and install/export rules.
+- Step 5: in-house forward-mode autodiff in `autodiff.hpp`, using Ceres-style `Jet<T, N>` dual numbers registered with Eigen through `NumTraits` and `ScalarBinaryOpTraits`. It adds no external dependency.
+- Step 6.1: `LinearFilter<N, M, Scalar>`.
+- Step 6.2: `ExtendedKalmanFilter<N, Scalar>`.
 
-`concepts.hpp` and `linear_filter.hpp` are real code; the other headers are still stubs. `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. The next step is Step 5/6.2: autodiff plus the EKF. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
+Both filters share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The UKF, smoother, fusion and diagnostics headers are still stubs. The next step is Step 6.3: the UKF and square-root UKF.
+
+Design decisions that differ from the guide's sketches:
+- **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
+  - Models are passed per call, as `predict(model, dt, Q)` and `update(model, z, R)`.
+  - Mz is deduced from `z`, so one filter can fuse sensors of different sizes.
+- **Model contracts** (C++20 concepts in `concepts.hpp`):
+  - Process models provide `predict(x, dt)`; measurement models provide `measure(x)`.
+  - A model may supply `jacobian(...)`, and the filter prefers it. Otherwise the model must be templated on its scalar type so the filter can autodiff it.
+  - Models call math functions unqualified (`using std::sin; sin(x)`), so argument-dependent lookup finds the Jet overloads.
+  - An optional `residual(z, z_pred)` handles angle wrapping.
+  - The autodiff concepts must check the output scalar type exactly (`HasShapeAndScalar`). Eigen's converting constructors make a shape-only check accept double-only models.
+
+`tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
 
 **Local toolchain quirk:** on this Mac, the Command Line Tools linker can't read the macOS 27 SDK (`tapi error: ... unknown architecture`), so CMake's compiler check fails. Until the tools are updated, configure with `-DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk`.
 

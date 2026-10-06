@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Eigen/Cholesky>
 #include <Eigen/Dense>
+
+#include "kalman/detail/joseph_update.hpp"
 
 namespace kalman {
 
@@ -33,7 +34,7 @@ public:
     void predict() {
         x_ = F_ * x_;
         P_ = F_ * P_ * F_.transpose() + Q_;
-        symmetrize(P_);
+        detail::symmetrize(P_);
     }
 
     // Returns false (and leaves the estimate untouched) if the innovation
@@ -42,23 +43,8 @@ public:
 
     bool update(const Measurement& z, const MeasCov& R) {
         const Measurement y = z - H_ * x_;
-        const Eigen::Matrix<Scalar, M, N> HP = H_ * P_;
-        MeasCov S = HP * H_.transpose() + R;
-        symmetrize(S);
-
-        const Eigen::LLT<MeasCov> llt(S);
-        if (llt.info() != Eigen::Success) return false;
-
-        // S is symmetric, so K^T = S^-1 (H P).
-        const Gain K = llt.solve(HP).transpose();
-        const Cov I_KH = Cov::Identity() - K * H_;
-
-        x_ += K * y;
-        P_ = I_KH * P_ * I_KH.transpose() + K * R * K.transpose();
-        symmetrize(P_);
-
+        if (!detail::joseph_update(x_, P_, H_, y, R, nis_)) return false;
         innovation_ = y;
-        nis_ = y.dot(llt.solve(y));
         return true;
     }
 
@@ -84,11 +70,6 @@ public:
     const MeasCov& measurement_noise() const { return R_; }
 
 private:
-    template <typename Mat>
-    static void symmetrize(Mat& A) {
-        A = Scalar(0.5) * (A + A.transpose()).eval();
-    }
-
     Transition F_;
     Observation H_;
     Cov Q_;

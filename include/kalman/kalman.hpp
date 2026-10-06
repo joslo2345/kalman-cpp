@@ -1,5 +1,6 @@
 #pragma once
 
+#include "kalman/autodiff.hpp"
 #include "kalman/concepts.hpp"
 #include "kalman/diagnostics.hpp"
 #include "kalman/ekf.hpp"
