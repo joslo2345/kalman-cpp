@@ -20,8 +20,15 @@ Done so far:
   - Usage is `smoother.record(filter)` once per time step, then `smooth()`. Steps without a measurement are fine.
   - The sequence counter makes `record()` throw unless exactly one `predict()` ran in between.
   - Any new filter must fill `Prediction` in `predict()` to work with the smoother.
+- Step 6.5: `AsyncFusion<Filter, Process>` in `fusion.hpp`.
+  - It wraps an EKF, UKF or SR-UKF with a process model and a `Q(dt)` function. The linear KF is excluded because its F is fixed and can't vary with dt; the EKF with linear models gives the same results.
+  - Each `add(t, model, z, R)` may use a different sensor model and size. A type-erased update is stored per measurement.
+  - Late measurements are handled exactly by rewind and replay. The engine keeps a filter snapshot after every buffered measurement and drops entries older than `horizon`. A late measurement is inserted in time order and the later ones are replayed on copies, so a failure leaves the engine unchanged.
+  - Equal timestamps are applied in arrival order.
+  - Possible results: `applied`, `reordered`, `too_old`, `update_failed`.
+  - `predicted(t)` returns a predicted copy and never changes the engine.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The fusion and diagnostics headers are still stubs. The next step is Step 6.5: the asynchronous fusion layer, which time-orders measurements, handles multi-rate sensors, and buffers out-of-sequence data.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. `diagnostics.hpp` is still a stub. The next step is Step 6.6: an error-state filter for orientation on SO(3).
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.

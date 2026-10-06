@@ -11,7 +11,8 @@ add_executable(unit_tests
     unit/test_autodiff.cpp
     unit/test_ekf.cpp
     unit/test_ukf.cpp
-    unit/test_smoother.cpp)
+    unit/test_smoother.cpp
+    unit/test_fusion.cpp)
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unit_tests PRIVATE kalman::kalman Catch2::Catch2WithMain)
 catch_discover_tests(unit_tests)
