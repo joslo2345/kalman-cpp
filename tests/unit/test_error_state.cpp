@@ -27,7 +27,7 @@ Eigen::Matrix3d right_jacobian(const Eigen::Vector3d& w) {
 
 ESKF::Cov initial_covariance() {
     ESKF::Cov P0 = ESKF::Cov::Zero();
-    P0.topLeftCorner<3, 3>() = 0.25 * Eigen::Matrix3d::Identity();      // 0.5 rad
+    P0.topLeftCorner<3, 3>() = 0.25 * Eigen::Matrix3d::Identity();        // 0.5 rad
     P0.bottomRightCorner<3, 3>() = 0.0025 * Eigen::Matrix3d::Identity();  // 0.05 rad/s
     return P0;
 }
@@ -111,8 +111,8 @@ TEST_CASE("SO(3) exp and log stay smooth across the small-angle branch", "[unit]
         // Value: matches AngleAxis (or identity at 0).
         const Eigen::Quaternion<J> qj = kalman::so3::exp(wj);
         const Eigen::Quaterniond q(qj.w().a, qj.x().a, qj.y().a, qj.z().a);
-        const Eigen::Quaterniond ref = angle == 0.0 ? Eigen::Quaterniond::Identity()
-                                                    : Eigen::Quaterniond(Eigen::AngleAxisd(angle, dir));
+        const Eigen::Quaterniond ref =
+            angle == 0.0 ? Eigen::Quaterniond::Identity() : Eigen::Quaterniond(Eigen::AngleAxisd(angle, dir));
         REQUIRE(q.angularDistance(ref) < 1e-15);
 
         // Derivative of the vector part: (1/2) I to first order.

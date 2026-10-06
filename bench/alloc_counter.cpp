@@ -1,15 +1,15 @@
 // Counts heap allocations on macOS by interposing the C allocation functions
 // (operator new and cv::fastMalloc both end up here). Linked into bench_alloc;
 // heaptrack, which the guide uses, is Linux-only.
+#include <malloc/malloc.h>
 #include <atomic>
 #include <cstdlib>
-#include <malloc/malloc.h>
 
-#define DYLD_INTERPOSE(replacement, replacee)                                                       \
-    __attribute__((used)) static struct {                                                           \
-        const void* replacement;                                                                    \
-        const void* replacee;                                                                       \
-    } _interpose_##replacee __attribute__((section("__DATA,__interpose"))) = {                      \
+#define DYLD_INTERPOSE(replacement, replacee)                                  \
+    __attribute__((used)) static struct {                                      \
+        const void* replacement;                                               \
+        const void* replacee;                                                  \
+    } _interpose_##replacee __attribute__((section("__DATA,__interpose"))) = { \
         reinterpret_cast<const void*>(&replacement), reinterpret_cast<const void*>(&replacee)};
 
 namespace {

@@ -26,8 +26,8 @@ void check_linear(const scenarios::Scenario<N, M>& sc, std::size_t steps) {
         nees += kalman::diagnostics::nees(Eigen::Matrix<double, K, 1>(e.template head<K>()),
                                           Eigen::Matrix<double, K, K>(kf.covariance().template topLeftCorner<K, K>()));
     }
-    UNSCOPED_INFO("[report] average NEES of the first " << K << " states: " << nees / steps);
-    REQUIRE(std::abs(nees / steps - K) < 0.15 * K);
+    UNSCOPED_INFO("[report] average NEES of the first " << K << " states: " << nees / static_cast<double>(steps));
+    REQUIRE(std::abs(nees / static_cast<double>(steps) - K) < 0.15 * K);
 }
 
 }  // namespace

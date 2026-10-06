@@ -11,9 +11,7 @@
 
 namespace scenarios {
 
-inline double wrap_angle(double a) {
-    return std::remainder(a, 2.0 * std::numbers::pi);
-}
+inline double wrap_angle(double a) { return std::remainder(a, 2.0 * std::numbers::pi); }
 
 // Constant-velocity motion, state [px, py, vx, vy]. Templated so the EKF can
 // differentiate it.

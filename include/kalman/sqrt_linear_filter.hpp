@@ -37,8 +37,8 @@ public:
 
     // Throws std::invalid_argument if P0 or R is not positive-definite. Q may
     // be positive semi-definite.
-    SquareRootLinearFilter(const Transition& F, const Observation& H, const Cov& Q, const MeasCov& R,
-                           const State& x0, const Cov& P0)
+    SquareRootLinearFilter(const Transition& F, const Observation& H, const Cov& Q, const MeasCov& R, const State& x0,
+                           const Cov& P0)
         : F_(F), H_(H), sqrt_Q_(detail::psd_sqrt(Q)), x_(x0) {
         const Eigen::LLT<MeasCov> r_llt(R);
         const Eigen::LLT<Cov> p_llt(P0);

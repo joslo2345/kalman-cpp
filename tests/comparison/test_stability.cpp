@@ -1,5 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
 #include <Eigen/Cholesky>
+#include <catch2/catch_test_macros.hpp>
 #include <kalman/kalman.hpp>
 
 #include "scenarios/ill_conditioned.hpp"
@@ -51,7 +51,7 @@ TEST_CASE("Covariance stays SPD over 1M float steps", "[comparison][stability]")
             if (!is_spd(scenarios::from_cv<float, 4, 4>(theirs.errorCovPost))) opencv_failed_at = k;
         }
     }
-    UNSCOPED_INFO("[report] Joseph-form KF lost SPD at step " << joseph_failed_at << ", OpenCV at step "
-                                                              << opencv_failed_at << " (-1 = never)");
-    SUCCEED();  // attaches the report to an assertion so Catch2 prints it with -s
+    // WARN prints even when the test passes; CI collects [report] lines.
+    WARN("[report] Joseph-form KF lost SPD at step " << joseph_failed_at << ", OpenCV at step " << opencv_failed_at
+                                                     << " (-1 = never)");
 }

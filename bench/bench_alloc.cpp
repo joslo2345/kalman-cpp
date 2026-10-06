@@ -43,7 +43,9 @@ int main(int argc, char** argv) {
     // ...and that it also sees allocations made inside OpenCV's library
     // (constructing a filter allocates its matrices), so a 0 below is real.
     alloc_counter_reset();
-    { const cv::KalmanFilter setup_probe = bench::make_opencv(sc); }
+    {
+        const cv::KalmanFilter setup_probe = bench::make_opencv(sc);
+    }
     const unsigned long opencv_setup = alloc_counter_get();
     if (opencv_setup == 0) {
         std::fprintf(stderr, "bench_alloc: allocations inside OpenCV are not being counted\n");
@@ -72,11 +74,11 @@ int main(int argc, char** argv) {
                                                            kf.correct(z);
                                                        }
                                                    });
-    const unsigned long mherb = count_allocations(
-        [&] { return std::make_unique<bench::MherbLinear<4, 2, double>>(sc); },
-        [&](auto& kf) {
-            for (const auto& z : zs_mherb) kf->step(z);
-        });
+    const unsigned long mherb =
+        count_allocations([&] { return std::make_unique<bench::MherbLinear<4, 2, double>>(sc); },
+                          [&](auto& kf) {
+                              for (const auto& z : zs_mherb) kf->step(z);
+                          });
 
     auto row = [&](const char* lib, const std::string& version, unsigned long value) {
         std::printf("%s,%s,S2,KF,float64,heap_allocations,%lu,count,%s\n", lib, version.c_str(), value, env.c_str());

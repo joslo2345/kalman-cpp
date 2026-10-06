@@ -28,8 +28,8 @@ public:
     using Observation = Eigen::Matrix<Scalar, M, N>;
     using Gain = Eigen::Matrix<Scalar, N, M>;
 
-    LinearFilter(const Transition& F, const Observation& H, const Cov& Q, const MeasCov& R,
-                 const State& x0, const Cov& P0)
+    LinearFilter(const Transition& F, const Observation& H, const Cov& Q, const MeasCov& R, const State& x0,
+                 const Cov& P0)
         : F_(F), H_(H), Q_(Q), R_(R), x_(x0), P_(P0) {}
 
     void predict() {

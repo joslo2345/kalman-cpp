@@ -28,9 +28,7 @@ struct XModel {
     }
 };
 
-Eigen::Vector4d truth_at(double t) {
-    return {-25.0 + 5.0 * t, 2.0 + 0.5 * std::sin(t), 5.0, 0.5 * std::cos(t)};
-}
+Eigen::Vector4d truth_at(double t) { return {-25.0 + 5.0 * t, 2.0 + 0.5 * std::sin(t), 5.0, 0.5 * std::cos(t)}; }
 
 // One measurement from one of three sensors running at different rates.
 struct Meas {
@@ -50,17 +48,20 @@ std::vector<Meas> multi_rate_measurements(double duration, double max_delay, uns
     std::uniform_real_distribution<double> delay(0.0, max_delay);
     std::vector<Meas> out;
     // Offsets keep timestamps of different sensors distinct.
-    for (double t = 0.05; t < duration; t += 0.1) {
+    for (int i = 0; 0.05 + 0.1 * i < duration; ++i) {
+        const double t = 0.05 + 0.1 * i;
         const Eigen::Vector4d x = truth_at(t);
         out.push_back({t, 0, 0, Eigen::Vector2d(x(0) + 0.5 * n(rng), x(1) + 0.5 * n(rng))});
     }
-    for (double t = 0.013; t < duration; t += 0.3) {
+    for (int i = 0; 0.013 + 0.3 * i < duration; ++i) {
+        const double t = 0.013 + 0.3 * i;
         Eigen::Vector2d z = scenarios::RangeBearingModel{}.measure(truth_at(t));
         z += Eigen::Vector2d(0.2 * n(rng), 0.05 * n(rng));
         z(1) = scenarios::wrap_angle(z(1));
         out.push_back({t, 0, 1, z});
     }
-    for (double t = 0.031; t < duration; t += 1.0 / 7.0) {
+    for (int i = 0; 0.031 + i / 7.0 < duration; ++i) {
+        const double t = 0.031 + i / 7.0;
         out.push_back({t, 0, 2, Eigen::Matrix<double, 1, 1>(truth_at(t)(0) + 0.3 * n(rng))});
     }
     for (auto& m : out) m.arrival = m.t + delay(rng);
@@ -70,9 +71,12 @@ std::vector<Meas> multi_rate_measurements(double duration, double max_delay, uns
 template <typename Fusion>
 kalman::FusionResult feed(Fusion& fusion, const Meas& m) {
     switch (m.sensor) {
-        case 0: return fusion.add(m.t, PositionModel{}, Eigen::Vector2d(m.z), R_pos);
-        case 1: return fusion.add(m.t, scenarios::RangeBearingModel{}, Eigen::Vector2d(m.z), R_rb);
-        default: return fusion.add(m.t, XModel{}, Eigen::Matrix<double, 1, 1>(m.z), R_x);
+        case 0:
+            return fusion.add(m.t, PositionModel{}, Eigen::Vector2d(m.z), R_pos);
+        case 1:
+            return fusion.add(m.t, scenarios::RangeBearingModel{}, Eigen::Vector2d(m.z), R_rb);
+        default:
+            return fusion.add(m.t, XModel{}, Eigen::Matrix<double, 1, 1>(m.z), R_x);
     }
 }
 
@@ -94,9 +98,15 @@ Filter process_in_order(std::vector<Meas> ms) {
         t = m.t;
         bool ok = false;
         switch (m.sensor) {
-            case 0: ok = f.update(PositionModel{}, Eigen::Vector2d(m.z), R_pos); break;
-            case 1: ok = f.update(scenarios::RangeBearingModel{}, Eigen::Vector2d(m.z), R_rb); break;
-            default: ok = f.update(XModel{}, Eigen::Matrix<double, 1, 1>(m.z), R_x); break;
+            case 0:
+                ok = f.update(PositionModel{}, Eigen::Vector2d(m.z), R_pos);
+                break;
+            case 1:
+                ok = f.update(scenarios::RangeBearingModel{}, Eigen::Vector2d(m.z), R_rb);
+                break;
+            default:
+                ok = f.update(XModel{}, Eigen::Matrix<double, 1, 1>(m.z), R_x);
+                break;
         }
         REQUIRE(ok);
     }
@@ -135,7 +145,8 @@ TEMPLATE_TEST_CASE("Out-of-sequence measurements give the same result as in-orde
 TEST_CASE("Measurements older than the horizon are rejected", "[unit][fusion]") {
     Fusion<kalman::ExtendedKalmanFilter<4>> fusion(make_filter<kalman::ExtendedKalmanFilter<4>>(), 0.0, {},
                                                    process_noise, /*horizon=*/1.0);
-    for (double t = 0.1; t < 5.0; t += 0.1) {
+    for (int i = 1; i < 50; ++i) {
+        const double t = 0.1 * i;
         REQUIRE(fusion.add(t, PositionModel{}, Eigen::Vector2d(truth_at(t).head<2>()), R_pos) ==
                 kalman::FusionResult::applied);
     }

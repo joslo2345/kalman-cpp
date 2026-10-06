@@ -179,8 +179,7 @@ std::vector<Estimate<4>> run_mherb_range_bearing(const scenarios::MultiSeedScena
 // re-linearize measurementMatrix at the prediction and pass the
 // pseudo-measurement z - h(x) + H x, so its linear residual equals the EKF
 // innovation (validated against our EKF in tests/comparison).
-inline std::vector<Estimate<4>> run_opencv_ekf_range_bearing(const scenarios::MultiSeedScenario& sc,
-                                                             std::size_t seed) {
+inline std::vector<Estimate<4>> run_opencv_ekf_range_bearing(const scenarios::MultiSeedScenario& sc, std::size_t seed) {
     const scenarios::RangeBearingModel h;
     cv::KalmanFilter kf(4, 2, 0, CV_64F);
     cv::eigen2cv(sc.F, kf.transitionMatrix);
@@ -222,8 +221,7 @@ private:
     Eigen::Matrix4d F_;
 };
 
-inline std::vector<Estimate<4>> run_opencv_ukf_range_bearing(const scenarios::MultiSeedScenario& sc,
-                                                             std::size_t seed) {
+inline std::vector<Estimate<4>> run_opencv_ukf_range_bearing(const scenarios::MultiSeedScenario& sc, std::size_t seed) {
     auto model = cv::makePtr<OpencvRangeBearingModel>(sc.dt);
     cv::detail::tracking::UnscentedKalmanFilterParams params(4, 2, 0, 0.0, 0.0, model, CV_64F);
     cv::eigen2cv(sc.Q, params.processNoiseCov);

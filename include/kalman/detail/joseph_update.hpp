@@ -19,9 +19,8 @@ void symmetrize(Mat& A) {
 // The Joseph form keeps P symmetric positive-definite under round-off. Returns
 // false, leaving x and P untouched, if S is not positive-definite.
 template <typename Scalar, int N, int M>
-bool joseph_update(Eigen::Matrix<Scalar, N, 1>& x, Eigen::Matrix<Scalar, N, N>& P,
-                   const Eigen::Matrix<Scalar, M, N>& H, const Eigen::Matrix<Scalar, M, 1>& y,
-                   const Eigen::Matrix<Scalar, M, M>& R, Scalar& nis) {
+bool joseph_update(Eigen::Matrix<Scalar, N, 1>& x, Eigen::Matrix<Scalar, N, N>& P, const Eigen::Matrix<Scalar, M, N>& H,
+                   const Eigen::Matrix<Scalar, M, 1>& y, const Eigen::Matrix<Scalar, M, M>& R, Scalar& nis) {
     using Cov = Eigen::Matrix<Scalar, N, N>;
 
     const Eigen::Matrix<Scalar, M, N> HP = H * P;

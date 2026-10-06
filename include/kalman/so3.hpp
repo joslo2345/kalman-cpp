@@ -47,7 +47,7 @@ Eigen::Matrix<T, 3, 1> log(const Eigen::Quaternion<T>& q_in) {
     const T n2 = q.vec().squaredNorm();
     if (n2 < T(1e-10)) {
         // 2 atan(n / w) / n ~ (2 / w) (1 - n^2 / (3 w^2))
-        const T w = q.w();
+        const T& w = q.w();
         return q.vec() * (T(2) / w * (T(1) - n2 / (T(3) * w * w)));
     }
     const T n = sqrt(n2);

@@ -49,7 +49,7 @@ Track run_ours(const scenarios::RangeBearingScenario& sc) {
 double position_rmse(const Track& est, const std::vector<Eigen::Vector4d>& truth) {
     double sum = 0.0;
     for (std::size_t k = 0; k < est.size(); ++k) sum += (est[k].head<2>() - truth[k].head<2>()).squaredNorm();
-    return std::sqrt(sum / est.size());
+    return std::sqrt(sum / static_cast<double>(est.size()));
 }
 
 }  // namespace
@@ -72,6 +72,6 @@ TEST_CASE("UKF beats an OpenCV-based EKF on range-bearing tracking", "[compariso
         ours_rmse += position_rmse(run_ours<kalman::UnscentedKalmanFilter<4>>(sc), sc.truth);
         opencv_ekf_rmse += position_rmse(run_opencv_ekf(sc), sc.truth);
     }
-    UNSCOPED_INFO("[report] UKF RMSE " << ours_rmse / 200 << " vs OpenCV EKF RMSE " << opencv_ekf_rmse / 200);
+    WARN("[report] UKF RMSE " << ours_rmse / 200 << " vs OpenCV EKF RMSE " << opencv_ekf_rmse / 200);
     REQUIRE(ours_rmse < opencv_ekf_rmse);
 }

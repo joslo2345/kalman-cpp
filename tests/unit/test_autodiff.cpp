@@ -27,22 +27,23 @@ TEST_CASE("Jet derivatives of elementary functions match analytic ones", "[unit]
     const double x = GENERATE(0.3, 0.7, 1.9);
     CAPTURE(x);
     // Unqualified calls find the Jet overloads by argument-dependent lookup.
-    CHECK_THAT(derivative([](auto t) { return sin(t); }, x), WithinAbs(std::cos(x), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return cos(t); }, x), WithinAbs(-std::sin(x), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return tan(t); }, x), WithinRel(1.0 / std::pow(std::cos(x), 2), 1e-13));
-    CHECK_THAT(derivative([](auto t) { return exp(t); }, x), WithinRel(std::exp(x), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return log(t); }, x), WithinRel(1.0 / x, 1e-14));
-    CHECK_THAT(derivative([](auto t) { return sqrt(t); }, x), WithinRel(0.5 / std::sqrt(x), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return atan(t); }, x), WithinRel(1.0 / (1 + x * x), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return tanh(t); }, x), WithinRel(1.0 - std::pow(std::tanh(x), 2), 1e-13));
-    CHECK_THAT(derivative([](auto t) { return pow(t, 3.5); }, x), WithinRel(3.5 * std::pow(x, 2.5), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return pow(2.0, t); }, x), WithinRel(std::pow(2.0, x) * std::log(2.0), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return pow(t, t); }, x),
+    CHECK_THAT(derivative([](const auto& t) { return sin(t); }, x), WithinAbs(std::cos(x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return cos(t); }, x), WithinAbs(-std::sin(x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return tan(t); }, x), WithinRel(1.0 / std::pow(std::cos(x), 2), 1e-13));
+    CHECK_THAT(derivative([](const auto& t) { return exp(t); }, x), WithinRel(std::exp(x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return log(t); }, x), WithinRel(1.0 / x, 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return sqrt(t); }, x), WithinRel(0.5 / std::sqrt(x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return atan(t); }, x), WithinRel(1.0 / (1 + x * x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return tanh(t); }, x), WithinRel(1.0 - std::pow(std::tanh(x), 2), 1e-13));
+    CHECK_THAT(derivative([](const auto& t) { return pow(t, 3.5); }, x), WithinRel(3.5 * std::pow(x, 2.5), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return pow(2.0, t); }, x),
+               WithinRel(std::pow(2.0, x) * std::log(2.0), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return pow(t, t); }, x),
                WithinRel(std::pow(x, x) * (std::log(x) + 1.0), 1e-14));
-    CHECK_THAT(derivative([](auto t) { return 1.0 / t; }, x), WithinRel(-1.0 / (x * x), 1e-14));
+    CHECK_THAT(derivative([](const auto& t) { return 1.0 / t; }, x), WithinRel(-1.0 / (x * x), 1e-14));
     if (x < 1.0) {
-        CHECK_THAT(derivative([](auto t) { return asin(t); }, x), WithinRel(1.0 / std::sqrt(1 - x * x), 1e-14));
-        CHECK_THAT(derivative([](auto t) { return acos(t); }, x), WithinRel(-1.0 / std::sqrt(1 - x * x), 1e-14));
+        CHECK_THAT(derivative([](const auto& t) { return asin(t); }, x), WithinRel(1.0 / std::sqrt(1 - x * x), 1e-14));
+        CHECK_THAT(derivative([](const auto& t) { return acos(t); }, x), WithinRel(-1.0 / std::sqrt(1 - x * x), 1e-14));
     }
 }
 

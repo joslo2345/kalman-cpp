@@ -62,8 +62,7 @@ public:
     // covariance is not positive-definite.
     template <int Mz, typename Model>
         requires MeasurementModel<Model, N, Mz, Scalar>
-    bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z,
-                const Eigen::Matrix<Scalar, Mz, Mz>& R) {
+    bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
         Eigen::Matrix<Scalar, Mz, 1> z_pred;
         Eigen::Matrix<Scalar, Mz, N> H;
         if constexpr (AnalyticMeasurementModel<Model, N, Mz, Scalar>) {

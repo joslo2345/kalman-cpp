@@ -27,14 +27,36 @@ struct Jet {
     // Seeds the i-th input variable: derivative is the i-th unit vector.
     Jet(const T& value, int i) : a(value) { v(i) = T(1); }
 
-    Jet& operator+=(const Jet& b) { a += b.a; v += b.v; return *this; }
-    Jet& operator-=(const Jet& b) { a -= b.a; v -= b.v; return *this; }
+    Jet& operator+=(const Jet& b) {
+        a += b.a;
+        v += b.v;
+        return *this;
+    }
+    Jet& operator-=(const Jet& b) {
+        a -= b.a;
+        v -= b.v;
+        return *this;
+    }
     Jet& operator*=(const Jet& b) { return *this = *this * b; }
     Jet& operator/=(const Jet& b) { return *this = *this / b; }
-    Jet& operator+=(const T& s) { a += s; return *this; }
-    Jet& operator-=(const T& s) { a -= s; return *this; }
-    Jet& operator*=(const T& s) { a *= s; v *= s; return *this; }
-    Jet& operator/=(const T& s) { a /= s; v /= s; return *this; }
+    Jet& operator+=(const T& s) {
+        a += s;
+        return *this;
+    }
+    Jet& operator-=(const T& s) {
+        a -= s;
+        return *this;
+    }
+    Jet& operator*=(const T& s) {
+        a *= s;
+        v *= s;
+        return *this;
+    }
+    Jet& operator/=(const T& s) {
+        a /= s;
+        v /= s;
+        return *this;
+    }
 
     // Hidden friends, so mixed Jet/scalar expressions work with implicit
     // conversions (e.g. `x(0) * 2` with T = double).
@@ -86,7 +108,9 @@ Jet<T, N> chain(const Jet<T, N>& f, const T& value, const T& derivative) {
 }
 
 template <typename T, int N>
-Jet<T, N> abs(const Jet<T, N>& f) { return f.a < T(0) ? -f : f; }
+Jet<T, N> abs(const Jet<T, N>& f) {
+    return f.a < T(0) ? -f : f;
+}
 template <typename T, int N>
 Jet<T, N> sqrt(const Jet<T, N>& f) {
     using std::sqrt;

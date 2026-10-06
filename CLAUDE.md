@@ -42,7 +42,12 @@ Done so far:
   - `average_bounds(dof, runs, confidence)` gives the interval for a Monte Carlo mean.
   - `ConsistencyCheck` accumulates per-step NEES/NIS across runs and reports `fraction_inside()`.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–8 are complete. The next step is Step 9: continuous integration.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–9 are complete. CI has never run, because the repo has no GitHub remote yet.
+- **Verified locally on macOS:** format, AppleClang `-Werror`, ASan+UBSan, coverage (99.7% of library lines) and clang-tidy.
+- **Not verified:** GCC, MSVC, Linux Clang 18, and apt's OpenCV 4.x for the comparison job. Warnings are errors only for the Clang compilers.
+- **Speed regression gate:** the guide's ">10% slower than the last release" check isn't implemented, because there is no release baseline yet.
+
+The next step is Step 10: documentation.
 
 OpenCV 5.0 (Homebrew, including the contrib modules) is installed. The `comparison_tests` executable builds only when CMake finds OpenCV.
 
@@ -86,7 +91,7 @@ Notes on the comparison tests:
   - Our Joseph-form KF fails at step 1. An earlier pass with Eigen `LLT` was rounding luck; its step-1 posterior was equally wrong.
   - Only `SquareRootLinearFilter` gets the right posterior. The stability test requires it to stay SPD and only reports the others.
 - **Fair SPD check:** `is_spd` there uses a symmetry tolerance relative to the matrix's scale, so ordinary float round-off isn't counted as a failure.
-- **Catch2 gotcha:** `UNSCOPED_INFO` only prints when an assertion follows it, so a `[report]` line at the end of a test needs a trailing `SUCCEED()`.
+- **Catch2 gotcha:** `UNSCOPED_INFO` only prints with `-s` and only when an assertion follows it. The comparison tests use `WARN("[report] ...")` instead, which prints on passing tests without `-s`, because `-s` would print 2M stability assertions. CI greps these lines into `comparison.md`.
 - **Linker warnings:** with the macOS 26.5 SDK workaround, linking OpenCV warns that the dylibs were built for macOS 27. The warnings are harmless.
 
 `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
@@ -114,6 +119,18 @@ ctest --test-dir build                     # all tests (Catch2 v3 via catch_disc
 ctest --test-dir build -R "<test name>"    # single test by name regex
 ./build/tests/unit_tests "[unit]"          # single Catch2 tag directly
 ```
+
+Checks that CI runs (`.github/workflows/ci.yml`), all runnable locally. The linters are pinned in `.venv`, at the same versions as CI:
+```bash
+git ls-files '*.hpp' '*.cpp' | grep -v '^bench/baselines/' | xargs .venv/bin/clang-format --dry-run --Werror
+ls tests/unit/*.cpp | xargs -P 6 -n 1 .venv/bin/clang-tidy -p build --quiet    # needs build/compile_commands.json
+cmake -B build-asan -DKALMAN_SANITIZE=ON -DKALMAN_WARNINGS_AS_ERRORS=ON ... && ctest --test-dir build-asan -j6
+cmake -B build-cov -DKALMAN_COVERAGE=ON ...   # then llvm-profdata merge + llvm-cov report on include/kalman
+```
+`kalman_configure_target()` in the top-level CMakeLists applies to our test and benchmark targets:
+- warnings: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`, or `/W4` on MSVC
+- optional `-Werror`, ASan+UBSan and coverage
+- Eigen as a system include
 
 Benchmarks: one command builds `build-bench` (Release, `-DKALMAN_BUILD_BENCH=ON`). It runs timing, accuracy and allocation counting, then rewrites `results/results.csv` and the README table between the BENCH markers. On this Mac, pass the SDK workaround through `CMAKE_ARGS`:
 ```bash

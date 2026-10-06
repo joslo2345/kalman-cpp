@@ -55,7 +55,10 @@ std::vector<kalman::RtsSmoother<4>::Estimate> batch_solution(const scenarios::Li
     const Eigen::VectorXd mean = cov * eta;
 
     std::vector<kalman::RtsSmoother<4>::Estimate> out(T + 1);
-    for (int k = 0; k <= T; ++k) out[k] = {mean.segment<4>(4 * k), cov.block<4, 4>(4 * k, 4 * k)};
+    for (int k = 0; k <= T; ++k) {
+        const Eigen::Index i = 4 * static_cast<Eigen::Index>(k);
+        out[k] = {mean.segment<4>(i), cov.block<4, 4>(i, i)};
+    }
     return out;
 }
 
@@ -93,26 +96,29 @@ TEST_CASE("RTS smoother equals the batch solution for every filter", "[unit][smo
 
     SECTION("linear KF") {
         kalman::LinearFilter<4, 2> f(sc.F, sc.H, sc.Q, sc.R, sc.x0, sc.P0);
-        require_close(smooth_with(f, sc, [](auto& f) { f.predict(); },
-                                  [](auto& f, const auto& z) { return f.update(z); }),
+        require_close(smooth_with(
+                          f, sc, [](auto& f) { f.predict(); }, [](auto& f, const auto& z) { return f.update(z); }),
                       exact, 1e-9);
     }
     SECTION("EKF") {
         kalman::ExtendedKalmanFilter<4> f(sc.x0, sc.P0);
-        require_close(smooth_with(f, sc, [&](auto& f) { f.predict(cv, 0.1, sc.Q); },
-                                  [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
+        require_close(smooth_with(
+                          f, sc, [&](auto& f) { f.predict(cv, 0.1, sc.Q); },
+                          [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
                       exact, 1e-9);
     }
     SECTION("UKF") {
         kalman::UnscentedKalmanFilter<4> f(sc.x0, sc.P0);
-        require_close(smooth_with(f, sc, [&](auto& f) { REQUIRE(f.predict(cv, 0.1, sc.Q)); },
-                                  [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
+        require_close(smooth_with(
+                          f, sc, [&](auto& f) { REQUIRE(f.predict(cv, 0.1, sc.Q)); },
+                          [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
                       exact, 1e-9);
     }
     SECTION("SR-UKF") {
         kalman::SquareRootUnscentedKalmanFilter<4> f(sc.x0, sc.P0);
-        require_close(smooth_with(f, sc, [&](auto& f) { REQUIRE(f.predict(cv, 0.1, sc.Q)); },
-                                  [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
+        require_close(smooth_with(
+                          f, sc, [&](auto& f) { REQUIRE(f.predict(cv, 0.1, sc.Q)); },
+                          [&](auto& f, const auto& z) { return f.update(pos, z, sc.R); }),
                       exact, 1e-9);
     }
 }

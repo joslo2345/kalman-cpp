@@ -21,6 +21,7 @@ add_executable(unit_tests
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(unit_tests PRIVATE KALMAN_VECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/vectors")
 target_link_libraries(unit_tests PRIVATE kalman::kalman Catch2::Catch2WithMain)
+kalman_configure_target(unit_tests)
 catch_discover_tests(unit_tests)
 
 # OpenCV is an optional, test-only dependency for comparison tests.
@@ -30,8 +31,10 @@ if(OpenCV_FOUND)
         comparison/test_equivalence.cpp
         comparison/test_stability.cpp
         comparison/test_nonlinear.cpp)
-    target_include_directories(comparison_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${OpenCV_INCLUDE_DIRS})
+    target_include_directories(comparison_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(comparison_tests SYSTEM PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(comparison_tests PRIVATE kalman::kalman Catch2::Catch2WithMain ${OpenCV_LIBS})
+    kalman_configure_target(comparison_tests)
     catch_discover_tests(comparison_tests)
 else()
     message(STATUS "OpenCV not found: comparison tests disabled")

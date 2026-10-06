@@ -19,7 +19,7 @@ struct PositionModel {
 double position_rmse(const std::vector<Eigen::Vector4d>& est, const std::vector<Eigen::Vector4d>& truth) {
     double sum = 0.0;
     for (std::size_t k = 0; k < est.size(); ++k) sum += (est[k].head<2>() - truth[k].head<2>()).squaredNorm();
-    return std::sqrt(sum / est.size());
+    return std::sqrt(sum / static_cast<double>(est.size()));
 }
 
 template <typename Process, typename Measurement>
@@ -56,8 +56,7 @@ TEST_CASE("EKF with linear models matches the linear KF", "[unit][ekf]") {
 TEST_CASE("Autodiff and analytic Jacobians give the same EKF estimates", "[unit][ekf][autodiff]") {
     auto sc = scenarios::range_bearing(500, 5);
     auto with_autodiff = run_ekf<scenarios::ConstantVelocity2D, scenarios::RangeBearingModel>(sc);
-    auto with_analytic =
-        run_ekf<scenarios::ConstantVelocity2DAnalytic, scenarios::RangeBearingModelAnalytic>(sc);
+    auto with_analytic = run_ekf<scenarios::ConstantVelocity2DAnalytic, scenarios::RangeBearingModelAnalytic>(sc);
     for (std::size_t k = 0; k < with_autodiff.size(); ++k) {
         REQUIRE((with_autodiff[k] - with_analytic[k]).cwiseAbs().maxCoeff() < 1e-10);
     }
@@ -71,6 +70,7 @@ TEST_CASE("EKF beats polar-to-Cartesian conversion on range-bearing tracking", "
         ekf_rmse += position_rmse(run_ekf<scenarios::ConstantVelocity2D, scenarios::RangeBearingModel>(sc), sc.truth);
 
         std::vector<Eigen::Vector4d> raw;
+        raw.reserve(sc.measurements.size());
         for (const auto& z : sc.measurements) {
             raw.emplace_back(z(0) * std::cos(z(1)), z(0) * std::sin(z(1)), 0.0, 0.0);
         }

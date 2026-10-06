@@ -22,7 +22,7 @@ double position_rmse(Filter& f, const scenarios::RangeBearingScenario& sc) {
         REQUIRE(f.update(scenarios::RangeBearingModel{}, sc.measurements[k], sc.R));
         sum += (f.state().template head<2>() - sc.truth[k].head<2>()).squaredNorm();
     }
-    return std::sqrt(sum / sc.measurements.size());
+    return std::sqrt(sum / static_cast<double>(sc.measurements.size()));
 }
 
 template <typename Mat>
@@ -162,8 +162,8 @@ TEST_CASE("Unscented filters reject invalid inputs", "[unit][ukf]") {
     SECTION("UKF with an indefinite covariance") {
         kalman::UnscentedKalmanFilter<4> ukf(x0, indefinite);
         REQUIRE_FALSE(ukf.predict(scenarios::ConstantVelocity2D{}, 0.1, Eigen::Matrix4d::Identity()));
-        REQUIRE_FALSE(ukf.update(scenarios::RangeBearingModel{}, Eigen::Vector2d(14.0, 0.8),
-                                 Eigen::Matrix2d::Identity().eval()));
+        REQUIRE_FALSE(
+            ukf.update(scenarios::RangeBearingModel{}, Eigen::Vector2d(14.0, 0.8), Eigen::Matrix2d::Identity().eval()));
         REQUIRE(ukf.state() == x0);
     }
     SECTION("UKF with a non-positive-definite innovation covariance") {

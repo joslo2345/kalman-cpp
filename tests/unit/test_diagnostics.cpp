@@ -68,9 +68,9 @@ Consistency monte_carlo(double q_scale, double r_scale) {
 
 TEST_CASE("Monte Carlo NEES and NIS of a well-tuned KF stay inside the 95% bounds", "[unit][diagnostics]") {
     const auto c = monte_carlo(1.0, 1.0);
-    UNSCOPED_INFO("[report] tuned KF: NEES avg " << c.nees.overall_average() << ", "
-                  << 100 * c.nees.fraction_inside() << "% of steps inside; NIS avg " << c.nis.overall_average()
-                  << ", " << 100 * c.nis.fraction_inside() << "% inside");
+    UNSCOPED_INFO("[report] tuned KF: NEES avg " << c.nees.overall_average() << ", " << 100 * c.nees.fraction_inside()
+                                                 << "% of steps inside; NIS avg " << c.nis.overall_average() << ", "
+                                                 << 100 * c.nis.fraction_inside() << "% inside");
     // Expect ~95% of steps inside. Steps are correlated in time, so allow slack.
     REQUIRE(c.nees.fraction_inside() > 0.85);
     REQUIRE(c.nis.fraction_inside() > 0.85);
@@ -82,7 +82,7 @@ TEST_CASE("Monte Carlo check flags an overconfident filter", "[unit][diagnostics
     // Filter believes the noise is 4x smaller than it is.
     const auto c = monte_carlo(0.25, 0.25);
     UNSCOPED_INFO("[report] overconfident KF: NEES avg " << c.nees.overall_average() << ", "
-                  << 100 * c.nees.fraction_inside() << "% of steps inside");
+                                                         << 100 * c.nees.fraction_inside() << "% of steps inside");
     REQUIRE(c.nees.fraction_inside() < 0.2);
     REQUIRE(c.nis.fraction_inside() < 0.2);
     REQUIRE(c.nees.overall_average() > 8.0);

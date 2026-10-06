@@ -111,7 +111,7 @@ public:
     double overall_average() const {
         double total = 0.0;
         for (double s : sums_) total += s;
-        return total / (static_cast<double>(runs_) * sums_.size());
+        return total / (static_cast<double>(runs_) * static_cast<double>(sums_.size()));
     }
 
     // Fraction of steps whose average lies inside the interval.
@@ -119,7 +119,7 @@ public:
         const Bounds b = average_bounds(dof_, runs_, confidence);
         std::size_t inside = 0;
         for (std::size_t k = 0; k < sums_.size(); ++k) inside += b.contains(average(k));
-        return static_cast<double>(inside) / sums_.size();
+        return static_cast<double>(inside) / static_cast<double>(sums_.size());
     }
 
 private:

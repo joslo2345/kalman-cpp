@@ -56,7 +56,7 @@ struct DirectionModel {
 };
 
 struct AttitudeScenario {
-    static constexpr double dt = 0.01;  // gyro at 100 Hz
+    static constexpr double dt = 0.01;       // gyro at 100 Hz
     static constexpr int vector_every = 10;  // accel + mag at 10 Hz
 
     Eigen::Vector3d gravity_ref{0.0, 0.0, 1.0};
@@ -71,9 +71,7 @@ struct AttitudeScenario {
     std::vector<Eigen::Vector3d> accel, mag;  // valid where k % vector_every == vector_every - 1
 };
 
-inline Eigen::Vector3d true_rate(double t) {
-    return {0.3 * std::sin(0.5 * t), 0.2 * std::cos(0.3 * t), 0.1};
-}
+inline Eigen::Vector3d true_rate(double t) { return {0.3 * std::sin(0.5 * t), 0.2 * std::cos(0.3 * t), 0.1}; }
 
 inline AttitudeScenario attitude(double duration, unsigned seed) {
     AttitudeScenario sc;

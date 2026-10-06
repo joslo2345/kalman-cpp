@@ -2,9 +2,9 @@
 #include <limits>
 #include <random>
 
+#include <Eigen/Cholesky>
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <Eigen/Cholesky>
 #include <kalman/detail/small_cholesky.hpp>
 
 namespace {

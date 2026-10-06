@@ -74,15 +74,18 @@ int main(int argc, char** argv) {
 
     // Names are "library|scenario|filter|precision" so the converter can split them.
     benchmark::RegisterBenchmark("kalman-cpp|S1|KF|float64", [](benchmark::State& st) { bench_ours(st, s1); });
-    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S1|KF|float64", [](benchmark::State& st) { bench_ours_sqrt(st, s1); });
+    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S1|KF|float64",
+                                 [](benchmark::State& st) { bench_ours_sqrt(st, s1); });
     benchmark::RegisterBenchmark("opencv|S1|KF|float64", [](benchmark::State& st) { bench_opencv(st, s1); });
     benchmark::RegisterBenchmark("mherb-kalman|S1|KF|float64", [](benchmark::State& st) { bench_mherb(st, s1); });
     benchmark::RegisterBenchmark("kalman-cpp|S2|KF|float64", [](benchmark::State& st) { bench_ours(st, s2); });
-    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S2|KF|float64", [](benchmark::State& st) { bench_ours_sqrt(st, s2); });
+    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S2|KF|float64",
+                                 [](benchmark::State& st) { bench_ours_sqrt(st, s2); });
     benchmark::RegisterBenchmark("opencv|S2|KF|float64", [](benchmark::State& st) { bench_opencv(st, s2); });
     benchmark::RegisterBenchmark("mherb-kalman|S2|KF|float64", [](benchmark::State& st) { bench_mherb(st, s2); });
     benchmark::RegisterBenchmark("kalman-cpp|S5|KF|float64", [](benchmark::State& st) { bench_ours(st, s5); });
-    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S5|KF|float64", [](benchmark::State& st) { bench_ours_sqrt(st, s5); });
+    benchmark::RegisterBenchmark("kalman-cpp-sqrt|S5|KF|float64",
+                                 [](benchmark::State& st) { bench_ours_sqrt(st, s5); });
     benchmark::RegisterBenchmark("opencv|S5|KF|float64", [](benchmark::State& st) { bench_opencv(st, s5); });
     benchmark::RegisterBenchmark("mherb-kalman|S5|KF|float64", [](benchmark::State& st) { bench_mherb(st, s5); });
 

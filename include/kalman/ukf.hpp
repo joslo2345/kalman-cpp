@@ -61,8 +61,7 @@ public:
     // covariance is not positive-definite.
     template <int Mz, typename Model>
         requires MeasurementModel<Model, N, Mz, Scalar>
-    bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z,
-                const Eigen::Matrix<Scalar, Mz, Mz>& R) {
+    bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
         using Meas = Eigen::Matrix<Scalar, Mz, 1>;
 
         const Eigen::LLT<Cov> llt(P_);

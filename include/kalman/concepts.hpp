@@ -12,8 +12,8 @@ namespace kalman {
 namespace detail {
 
 template <typename Expr, int Rows, int Cols = 1>
-concept HasShape = std::remove_cvref_t<Expr>::RowsAtCompileTime == Rows &&
-                   std::remove_cvref_t<Expr>::ColsAtCompileTime == Cols;
+concept HasShape =
+    std::remove_cvref_t<Expr>::RowsAtCompileTime == Rows && std::remove_cvref_t<Expr>::ColsAtCompileTime == Cols;
 
 // Shape check plus an exact scalar check. Needed for autodiff detection: Eigen's
 // converting constructors would otherwise let a double-only model "accept" a
@@ -41,8 +41,7 @@ concept AnalyticProcessModel =
 // differentiate it automatically.
 template <typename M, int N, typename Scalar = double>
 concept AutodiffProcessModel =
-    ProcessModel<M, N, Scalar> &&
-    requires(const M m, const Eigen::Matrix<Jet<Scalar, N>, N, 1>& x, double dt) {
+    ProcessModel<M, N, Scalar> && requires(const M m, const Eigen::Matrix<Jet<Scalar, N>, N, 1>& x, double dt) {
         { m.predict(x, dt) } -> detail::HasShapeAndScalar<Jet<Scalar, N>, N>;
     };
 
@@ -60,8 +59,7 @@ concept AnalyticMeasurementModel =
 
 template <typename M, int N, int Mz, typename Scalar = double>
 concept AutodiffMeasurementModel =
-    MeasurementModel<M, N, Mz, Scalar> &&
-    requires(const M m, const Eigen::Matrix<Jet<Scalar, N>, N, 1>& x) {
+    MeasurementModel<M, N, Mz, Scalar> && requires(const M m, const Eigen::Matrix<Jet<Scalar, N>, N, 1>& x) {
         { m.measure(x) } -> detail::HasShapeAndScalar<Jet<Scalar, N>, Mz>;
     };
 

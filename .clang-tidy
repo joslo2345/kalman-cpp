@@ -1,0 +1,20 @@
+---
+# Bug-finding checks, applied to the library headers (and our test/bench code).
+# EnumCastOutOfRange is disabled for false positives on Catch2's flag enums.
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  performance-*,
+  modernize-use-override,
+  modernize-use-nullptr,
+  modernize-use-using,
+  readability-misleading-indentation,
+  readability-redundant-smartptr-get,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -performance-enum-size,
+  -clang-analyzer-optin.core.EnumCastOutOfRange
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/include/kalman/.*'
+FormatStyle: file

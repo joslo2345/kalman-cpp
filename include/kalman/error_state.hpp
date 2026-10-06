@@ -78,9 +78,10 @@ public:
             { h.measure(x) } -> detail::HasShape<Mz>;
         }
     bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
-        static_assert(requires(const S<J>& xj) {
-            { h.measure(xj) } -> detail::HasShapeAndScalar<J, Mz>;
-        }, "measurement model needs measure(x) templated on the scalar");
+        static_assert(
+            requires(const S<J>& xj) {
+                { h.measure(xj) } -> detail::HasShapeAndScalar<J, Mz>;
+            }, "measurement model needs measure(x) templated on the scalar");
 
         const Eigen::Matrix<Scalar, Mz, 1> z_pred = h.measure(x_);
         const Eigen::Matrix<Scalar, Mz, N> H = gradient(h.measure(perturbed()).eval());

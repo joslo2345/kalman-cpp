@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CLANG_FORMAT_VERSION: "19.1.7"
+  CLANG_TIDY_VERSION: "19.1.0"
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "clang-format==${CLANG_FORMAT_VERSION}"
+      - name: Check formatting
+        run: git ls-files '*.hpp' '*.cpp' | grep -v '^bench/baselines/' | xargs clang-format --dry-run --Werror
+
+  build-test:
+    name: build-test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-gcc
+            os: ubuntu-24.04
+            cc: gcc-14
+            cxx: g++-14
+            werror: "OFF"
+          - name: linux-clang
+            os: ubuntu-24.04
+            cc: clang-18
+            cxx: clang++-18
+            werror: "ON"
+          - name: macos-appleclang
+            os: macos-15
+            cc: clang
+            cxx: clang++
+            werror: "ON"
+          - name: windows-msvc
+            os: windows-2022
+            cc: cl
+            cxx: cl
+            werror: "OFF"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        shell: bash
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DKALMAN_WARNINGS_AS_ERRORS=${{ matrix.werror }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure --parallel 4
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18
+          -DKALMAN_SANITIZE=ON -DKALMAN_WARNINGS_AS_ERRORS=ON
+      - run: cmake --build build --parallel
+      - name: Test with ASan + UBSan
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build --output-on-failure --parallel 4
+
+  clang-tidy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "clang-tidy==${CLANG_TIDY_VERSION}"
+      - name: Configure (compile_commands.json)
+        run: cmake -B build -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18
+      - name: Fetch dependencies and build Catch2
+        run: cmake --build build --target Catch2WithMain --parallel
+      - name: Run clang-tidy
+        # The unit tests together include every library header.
+        run: ls tests/unit/*.cpp | xargs -P 4 -n 1 clang-tidy -p build --quiet
+
+  coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18 -DKALMAN_COVERAGE=ON
+      - run: cmake --build build --parallel
+      - name: Test
+        env:
+          LLVM_PROFILE_FILE: ${{ github.workspace }}/build/profiles/%p.profraw
+        run: ctest --test-dir build --output-on-failure --parallel 4
+      - name: Report
+        run: |
+          llvm-profdata-18 merge -sparse build/profiles/*.profraw -o build/coverage.profdata
+          llvm-cov-18 report build/tests/unit_tests -instr-profile=build/coverage.profdata \
+            "$PWD/include/kalman" | tee build/coverage.txt
+          llvm-cov-18 export build/tests/unit_tests -instr-profile=build/coverage.profdata \
+            -format=lcov "$PWD/include/kalman" > build/coverage.lcov
+          { echo '## Library coverage'; echo '```'; cat build/coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            build/coverage.txt
+            build/coverage.lcov
+
+  # Comparison tests against OpenCV, the benchmark build, and the comparison
+  # report (guide Steps 7-8). Published benchmark numbers come from a
+  # dedicated machine (scripts/run_benchmarks.sh), not from shared runners.
+  comparison:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install OpenCV
+        run: sudo apt-get update && sudo apt-get install -y libopencv-dev libopencv-contrib-dev
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r scripts/requirements.txt
+      - name: Verify frozen scenarios
+        run: python scripts/make_vectors.py --check
+      - name: Configure
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18 -DKALMAN_BUILD_BENCH=ON
+      - run: cmake --build build --parallel
+      - name: Comparison tests
+        # [report] lines are emitted with WARN, so they print without -s.
+        run: |
+          set -o pipefail
+          ./build/tests/comparison_tests 2>&1 | tee build/comparison.log | tail -5
+      - name: Accuracy and stability metrics
+        run: |
+          ENV="$(git rev-parse --short HEAD),$(uname -m),$(uname -s),clang-18,$(date +%F)"
+          echo "library,library_version,scenario,filter,precision,metric,value,unit,commit,cpu,os,toolchain,date" > build/results.csv
+          ./build/bench/accuracy "$ENV" >> build/results.csv
+      - name: Comparison report
+        run: |
+          {
+            echo '# Comparison report'
+            echo
+            echo '## Test reports'
+            grep -h '\[report\]' build/comparison.log | sed 's/^ *\[report\] */- /' | sort -u
+            echo
+            echo '## Accuracy and stability (CI runner)'
+            python scripts/make_table.py build/results.csv kalman-cpp
+          } > build/comparison.md
+          cat build/comparison.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: comparison-report
+          path: |
+            build/comparison.md
+            build/results.csv

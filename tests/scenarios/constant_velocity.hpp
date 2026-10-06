@@ -51,8 +51,8 @@ inline Eigen::Matrix4d cv_process_noise(double dt, double accel_sigma) {
 // Note: std::normal_distribution is implementation-defined, so the exact samples
 // differ between standard libraries. Cross-library comparisons must use the
 // frozen files in tests/vectors/ instead.
-inline LinearScenario<4, 2> constant_velocity_2d(int steps, unsigned seed, double dt = 0.1,
-                                                 double accel_sigma = 0.5, double meas_sigma = 1.0) {
+inline LinearScenario<4, 2> constant_velocity_2d(int steps, unsigned seed, double dt = 0.1, double accel_sigma = 0.5,
+                                                 double meas_sigma = 1.0) {
     LinearScenario<4, 2> sc;
     sc.F = cv_transition(dt);
     sc.Q = cv_process_noise(dt, accel_sigma);

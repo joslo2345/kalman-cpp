@@ -96,8 +96,8 @@ void range_bearing() {
         const char* filter;
         double sq = 0.0, nees = 0.0;
     };
-    Run runs[6] = {{"kalman-cpp", "EKF"}, {"kalman-cpp", "UKF"},   {"mherb-kalman", "EKF"},
-                   {"mherb-kalman", "UKF"}, {"opencv", "EKF"}, {"opencv", "UKF"}};
+    Run runs[6] = {{"kalman-cpp", "EKF"},   {"kalman-cpp", "UKF"}, {"mherb-kalman", "EKF"},
+                   {"mherb-kalman", "UKF"}, {"opencv", "EKF"},     {"opencv", "UKF"}};
     std::size_t count = 0;
     for (std::size_t s = 0; s < sc.zs.size(); ++s) {
         kalman::ExtendedKalmanFilter<4> ekf(sc.x0, sc.P0);
@@ -145,25 +145,43 @@ void stability() {
 
     auto kf = bench::make_ours(sc);
     row("kalman-cpp", "S4", "KF", "float32", "steps_to_failure",
-        steps_to_failure(n, [&](std::size_t k) { kf.predict(); kf.update(sc.zs[k]); }, [&] { return kf.covariance(); }),
+        steps_to_failure(
+            n,
+            [&](std::size_t k) {
+                kf.predict();
+                kf.update(sc.zs[k]);
+            },
+            [&] { return kf.covariance(); }),
         "steps");
 
     auto sr = bench::make_ours_sqrt(sc);
     row("kalman-cpp-sqrt", "S4", "KF", "float32", "steps_to_failure",
-        steps_to_failure(n, [&](std::size_t k) { sr.predict(); sr.update(sc.zs[k]); }, [&] { return sr.covariance(); }),
+        steps_to_failure(
+            n,
+            [&](std::size_t k) {
+                sr.predict();
+                sr.update(sc.zs[k]);
+            },
+            [&] { return sr.covariance(); }),
         "steps");
 
     cv::KalmanFilter cvkf = bench::make_opencv(sc);
     const auto zs = bench::to_cv(sc.zs);
     row("opencv", "S4", "KF", "float32", "steps_to_failure",
-        steps_to_failure(n, [&](std::size_t k) { cvkf.predict(); cvkf.correct(zs[k]); },
-                         [&] { return bench::from_cv<float, 4, 4>(cvkf.errorCovPost); }),
+        steps_to_failure(
+            n,
+            [&](std::size_t k) {
+                cvkf.predict();
+                cvkf.correct(zs[k]);
+            },
+            [&] { return bench::from_cv<float, 4, 4>(cvkf.errorCovPost); }),
         "steps");
 
     bench::MherbLinear<4, 2, float> mk(sc);
     row("mherb-kalman", "S4", "KF", "float32", "steps_to_failure",
-        steps_to_failure(n, [&](std::size_t k) { mk.step(bench::MState<2, float>(sc.zs[k])); },
-                         [&] { return Eigen::Matrix4f(mk.kf.getCovariance()); }),
+        steps_to_failure(
+            n, [&](std::size_t k) { mk.step(bench::MState<2, float>(sc.zs[k])); },
+            [&] { return Eigen::Matrix4f(mk.kf.getCovariance()); }),
         "steps");
 
     bench::NaiveFilter<4, 2, float> naive(sc);

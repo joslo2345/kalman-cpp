@@ -106,7 +106,7 @@ TEST_CASE("NIS equals y^T S^-1 y and averages to the measurement dimension", "[u
     }
     // E[NIS] = M = 2 for a consistent filter. With 5000 samples the standard
     // error of the mean is 2/sqrt(5000) ~= 0.028, so 0.15 is a ~5-sigma band.
-    REQUIRE_THAT(nis_sum / sc.measurements.size(), WithinAbs(2.0, 0.15));
+    REQUIRE_THAT(nis_sum / static_cast<double>(sc.measurements.size()), WithinAbs(2.0, 0.15));
 }
 
 TEST_CASE("Update rejects a non-positive-definite innovation covariance", "[unit][linear]") {
@@ -120,9 +120,8 @@ TEST_CASE("Update rejects a non-positive-definite innovation covariance", "[unit
 
 TEST_CASE("Single-precision filter stays SPD over a long run", "[unit][linear]") {
     auto sc = scenarios::constant_velocity_2d(1, 3);
-    kalman::LinearFilter<4, 2, float> kf(sc.F.cast<float>(), sc.H.cast<float>(), sc.Q.cast<float>(),
-                                         sc.R.cast<float>(), sc.x0.cast<float>(),
-                                         sc.P0.cast<float>());
+    kalman::LinearFilter<4, 2, float> kf(sc.F.cast<float>(), sc.H.cast<float>(), sc.Q.cast<float>(), sc.R.cast<float>(),
+                                         sc.x0.cast<float>(), sc.P0.cast<float>());
     std::mt19937 rng(3);
     const Eigen::Matrix2f R = sc.R.cast<float>();
     Eigen::Vector4f x = sc.x0.cast<float>();

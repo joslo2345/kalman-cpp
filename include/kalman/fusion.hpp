@@ -40,8 +40,9 @@ public:
     using Scalar = typename State::Scalar;
     using NoiseModel = std::function<Cov(double dt)>;
 
-    static_assert(requires(Filter& f, const Process& p, double dt, const Cov& Q) { f.predict(p, dt, Q); },
-                  "AsyncFusion needs a filter with predict(process_model, dt, Q)");
+    static_assert(
+        requires(Filter& f, const Process& p, double dt, const Cov& Q) { f.predict(p, dt, Q); },
+        "AsyncFusion needs a filter with predict(process_model, dt, Q)");
 
     AsyncFusion(const Filter& filter, double t0, Process process, NoiseModel process_noise, double horizon)
         : process_(std::move(process)),
@@ -56,8 +57,7 @@ public:
     }
 
     template <typename Model, int Mz>
-    FusionResult add(double t, Model h, const Eigen::Matrix<Scalar, Mz, 1>& z,
-                     const Eigen::Matrix<Scalar, Mz, Mz>& R) {
+    FusionResult add(double t, Model h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
         if (t < base_time_) return FusionResult::too_old;
 
         Entry entry{t, [h = std::move(h), z, R](Filter& f) { return f.update(h, z, R); }, base_};
