@@ -28,9 +28,14 @@ endif()
 # otherwise. Supported: Eigen 3.4 and 5.x, both tested in CI.
 option(KALMAN_FETCH_EIGEN "Download Eigen if it is not installed" ON)
 set(KALMAN_EIGEN_FETCH_TAG "3.4.0" CACHE STRING "Eigen release to download when it is not installed")
-# The user package registry is skipped: Eigen's own CMake registers every
-# build tree there, which would tie this build to some other build directory.
-find_package(Eigen3 3.4...<6 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
+# Two lookups rather than one 3.4...<6 range: Eigen 3.4's version file uses
+# SameMajorVersion, which rejects a range spanning major versions. The user
+# package registry is skipped: Eigen's own CMake registers every build tree
+# there, which would tie this build to some other build directory.
+find_package(Eigen3 3.4 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
+if(NOT Eigen3_FOUND)
+    find_package(Eigen3 5 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
+endif()
 if(Eigen3_FOUND)
     message(STATUS "kalman-cpp: using installed Eigen ${Eigen3_VERSION}")
 elseif(KALMAN_FETCH_EIGEN)
