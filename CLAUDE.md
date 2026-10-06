@@ -9,8 +9,13 @@ Done so far:
 - Step 5: in-house forward-mode autodiff in `autodiff.hpp`, using Ceres-style `Jet<T, N>` dual numbers registered with Eigen through `NumTraits` and `ScalarBinaryOpTraits`. It adds no external dependency.
 - Step 6.1: `LinearFilter<N, M, Scalar>`.
 - Step 6.2: `ExtendedKalmanFilter<N, Scalar>`.
+- Step 6.3: `UnscentedKalmanFilter<N, Scalar>` and `SquareRootUnscentedKalmanFilter<N, Scalar>`.
+  - Both use scaled Van der Merwe sigma points, set through `UnscentedParams`; the defaults are alpha=1, beta=2, kappa=0, which keep the weights non-negative.
+  - The SR-UKF propagates the lower Cholesky factor with QR plus rank-1 `cholupdate`.
+  - Q may be positive semi-definite, since `psd_sqrt` uses an eigendecomposition. R must be positive-definite.
+  - The shared code is in `detail/unscented.hpp`.
 
-Both filters share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The UKF, smoother, fusion and diagnostics headers are still stubs. The next step is Step 6.3: the UKF and square-root UKF.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The smoother, fusion and diagnostics headers are still stubs. The next step is Step 6.4: the RTS smoother.
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
@@ -20,8 +25,14 @@ Design decisions that differ from the guide's sketches:
   - Process models provide `predict(x, dt)`; measurement models provide `measure(x)`.
   - A model may supply `jacobian(...)`, and the filter prefers it. Otherwise the model must be templated on its scalar type so the filter can autodiff it.
   - Models call math functions unqualified (`using std::sin; sin(x)`), so argument-dependent lookup finds the Jet overloads.
-  - An optional `residual(z, z_pred)` handles angle wrapping.
+  - An optional `residual(z, z_pred)` handles angle wrapping. The unscented filters also use it to average sigma points around the central one, so bearings near ±π average correctly.
+  - The UKF and SR-UKF only need `double` models, not templated ones.
   - The autodiff concepts must check the output scalar type exactly (`HasShapeAndScalar`). Eigen's converting constructors make a shape-only check accept double-only models.
+
+Testing notes for the unscented filters:
+- `scenarios::range_bearing()` by default is only mildly nonlinear, so the EKF and UKF are tied there.
+- Use `scenarios::close_pass()` when a test needs the UKF to beat the EKF. Its UKF/EKF RMSE ratio was 0.75–0.86 over five disjoint blocks of 200 seeds.
+- With alpha=1e-3 the central weight is about −1e6, which costs about 6 digits of precision. Tolerances against the exact KF are therefore 1e-5 there and 1e-10 for alpha=1.
 
 `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
 

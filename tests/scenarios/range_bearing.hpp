@@ -74,15 +74,26 @@ struct RangeBearingScenario {
     std::vector<Eigen::Vector2d> measurements;
 };
 
-// A target that passes 20 m from the sensor, so the measurement model is
-// strongly nonlinear near closest approach.
-inline RangeBearingScenario range_bearing(int steps, unsigned seed) {
+struct RangeBearingParams {
+    double closest_approach = 20.0;  // m; the target moves along y = closest_approach
+    double start_x = -50.0;          // m
+    double speed = 5.0;              // m/s, along +x
+    double range_sigma = 0.5;        // m
+    double bearing_sigma = 0.01;     // rad
+    double pos_sigma0 = 5.0;         // m, initial position uncertainty
+    double vel_sigma0 = 2.0;         // m/s, initial velocity uncertainty
+};
+
+// Default: a target passing 20 m from the sensor with an accurate sensor. The
+// model is only mildly nonlinear here, so EKF and UKF perform about the same.
+inline RangeBearingScenario range_bearing(int steps, unsigned seed, const RangeBearingParams& p = {}) {
     RangeBearingScenario sc;
     sc.dt = 0.1;
     sc.Q = cv_process_noise(sc.dt, 0.5);
-    sc.R = Eigen::Vector2d(0.5 * 0.5, 0.01 * 0.01).asDiagonal();
-    sc.x0 << -50.0, 20.0, 5.0, 0.0;
-    sc.P0 = Eigen::Vector4d(25.0, 25.0, 4.0, 4.0).asDiagonal();
+    sc.R = Eigen::Vector2d(p.range_sigma * p.range_sigma, p.bearing_sigma * p.bearing_sigma).asDiagonal();
+    sc.x0 << p.start_x, p.closest_approach, p.speed, 0.0;
+    const double ps = p.pos_sigma0 * p.pos_sigma0, vs = p.vel_sigma0 * p.vel_sigma0;
+    sc.P0 = Eigen::Vector4d(ps, ps, vs, vs).asDiagonal();
 
     std::mt19937 rng(seed);
     const RangeBearingModel h;
@@ -96,6 +107,18 @@ inline RangeBearingScenario range_bearing(int steps, unsigned seed) {
         sc.measurements.push_back(z);
     }
     return sc;
+}
+
+// Strongly nonlinear: the target passes 2 m from a sensor with an accurate
+// range but a poor bearing (0.3 rad), so the posterior is a curved "banana"
+// that a first-order linearization represents badly.
+inline RangeBearingParams close_pass() {
+    RangeBearingParams p;
+    p.closest_approach = 2.0;
+    p.start_x = -25.0;
+    p.range_sigma = 0.2;
+    p.bearing_sigma = 0.3;
+    return p;
 }
 
 // Random states away from the sensor singularity at the origin.
