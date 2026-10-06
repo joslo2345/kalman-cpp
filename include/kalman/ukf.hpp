@@ -6,6 +6,7 @@
 #include "kalman/concepts.hpp"
 #include "kalman/detail/joseph_update.hpp"
 #include "kalman/detail/unscented.hpp"
+#include "kalman/prediction.hpp"
 
 namespace kalman {
 
@@ -40,13 +41,19 @@ public:
 
         const State x = Y * w_.wm;
         Cov P = Q;
+        Cov cross = Cov::Zero();
         for (int i = 0; i < L; ++i) {
             const State d = Y.col(i) - x;
             P += w_.wc(i) * d * d.transpose();
+            cross += w_.wc(i) * (X.col(i) - x_) * d.transpose();
         }
         detail::symmetrize(P);
         x_ = x;
         P_ = P;
+        pred_.x = x_;
+        pred_.P = P_;
+        pred_.cross = cross;
+        ++pred_.sequence;
         return true;
     }
 
@@ -96,6 +103,9 @@ public:
     // Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
+    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    const Prediction<N, Scalar>& last_prediction() const { return pred_; }
+
     void set_state(const State& x, const Cov& P) {
         x_ = x;
         P_ = P;
@@ -106,6 +116,7 @@ private:
     Cov P_;
     detail::UnscentedWeights<N, Scalar> w_;
     Scalar nis_ = Scalar(0);
+    Prediction<N, Scalar> pred_;
 };
 
 }  // namespace kalman

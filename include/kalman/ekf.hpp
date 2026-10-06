@@ -5,6 +5,7 @@
 #include "kalman/autodiff.hpp"
 #include "kalman/concepts.hpp"
 #include "kalman/detail/joseph_update.hpp"
+#include "kalman/prediction.hpp"
 
 namespace kalman {
 
@@ -49,8 +50,12 @@ public:
             static_assert(sizeof(Model) == 0,
                           "process model needs either jacobian(x, dt) or a predict() templated on the scalar");
         }
+        pred_.cross = P_ * F.transpose();
         P_ = F * P_ * F.transpose() + Q;
         detail::symmetrize(P_);
+        pred_.x = x_;
+        pred_.P = P_;
+        ++pred_.sequence;
     }
 
     // Returns false (and leaves the estimate untouched) if the innovation
@@ -88,6 +93,9 @@ public:
     // Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
+    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    const Prediction<N, Scalar>& last_prediction() const { return pred_; }
+
     void set_state(const State& x, const Cov& P) {
         x_ = x;
         P_ = P;
@@ -97,6 +105,7 @@ private:
     State x_;
     Cov P_;
     Scalar nis_ = Scalar(0);
+    Prediction<N, Scalar> pred_;
 };
 
 }  // namespace kalman

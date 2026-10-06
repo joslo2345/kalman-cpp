@@ -14,8 +14,14 @@ Done so far:
   - The SR-UKF propagates the lower Cholesky factor with QR plus rank-1 `cholupdate`.
   - Q may be positive semi-definite, since `psd_sqrt` uses an eigendecomposition. R must be positive-definite.
   - The shared code is in `detail/unscented.hpp`.
+- Step 6.4: `RtsSmoother<N, Scalar>`, one smoother for all four filters.
+  - Every filter's `predict()` fills a `Prediction` record, read through `last_prediction()`. It holds the predicted mean and covariance, the cross-covariance `Cov(x_{k-1}, x_k)`, and a sequence counter.
+  - The cross-covariance is `P F^T` for the KF and EKF, and comes from the sigma points for the UKF and SR-UKF, which gives the unscented RTS smoother.
+  - Usage is `smoother.record(filter)` once per time step, then `smooth()`. Steps without a measurement are fine.
+  - The sequence counter makes `record()` throw unless exactly one `predict()` ran in between.
+  - Any new filter must fill `Prediction` in `predict()` to work with the smoother.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The smoother, fusion and diagnostics headers are still stubs. The next step is Step 6.4: the RTS smoother.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. The fusion and diagnostics headers are still stubs. The next step is Step 6.5: the asynchronous fusion layer, which time-orders measurements, handles multi-rate sensors, and buffers out-of-sequence data.
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
@@ -33,6 +39,8 @@ Testing notes for the unscented filters:
 - `scenarios::range_bearing()` by default is only mildly nonlinear, so the EKF and UKF are tied there.
 - Use `scenarios::close_pass()` when a test needs the UKF to beat the EKF. Its UKF/EKF RMSE ratio was 0.75–0.86 over five disjoint blocks of 200 seeds.
 - With alpha=1e-3 the central weight is about −1e6, which costs about 6 digits of precision. Tolerances against the exact KF are therefore 1e-5 there and 1e-10 for alpha=1.
+
+The strongest smoother test compares against the exact batch solution of the whole linear-Gaussian problem (inverting the information matrix), including a gap of missing measurements. It needs a full-rank Q, because the constant-velocity Q from `cv_process_noise` is singular.
 
 `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
 

@@ -7,6 +7,7 @@
 
 #include "kalman/concepts.hpp"
 #include "kalman/detail/unscented.hpp"
+#include "kalman/prediction.hpp"
 
 namespace kalman {
 
@@ -44,8 +45,15 @@ public:
         const Eigen::Matrix<Scalar, N, L> D = Y.colwise() - x;
         Cov S;
         if (!detail::sqrt_covariance(D, w_.wc, detail::psd_sqrt(Q), S)) return false;
+
+        Cov cross = Cov::Zero();
+        for (int i = 0; i < L; ++i) cross += w_.wc(i) * (X.col(i) - x_) * D.col(i).transpose();
         x_ = x;
         S_ = S;
+        pred_.x = x_;
+        pred_.P = S_ * S_.transpose();
+        pred_.cross = cross;
+        ++pred_.sequence;
         return true;
     }
 
@@ -104,6 +112,9 @@ public:
     // Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
+    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    const Prediction<N, Scalar>& last_prediction() const { return pred_; }
+
     // Returns false (and leaves the estimate untouched) if P is not
     // positive-definite.
     bool set_state(const State& x, const Cov& P) {
@@ -119,6 +130,7 @@ private:
     Cov S_;
     detail::UnscentedWeights<N, Scalar> w_;
     Scalar nis_ = Scalar(0);
+    Prediction<N, Scalar> pred_;
 };
 
 }  // namespace kalman

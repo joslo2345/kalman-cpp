@@ -6,6 +6,7 @@
 #include "kalman/ekf.hpp"
 #include "kalman/fusion.hpp"
 #include "kalman/linear_filter.hpp"
+#include "kalman/prediction.hpp"
 #include "kalman/smoother.hpp"
 #include "kalman/sqrt_ukf.hpp"
 #include "kalman/ukf.hpp"

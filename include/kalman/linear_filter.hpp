@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 
 #include "kalman/detail/joseph_update.hpp"
+#include "kalman/prediction.hpp"
 
 namespace kalman {
 
@@ -32,9 +33,11 @@ public:
         : F_(F), H_(H), Q_(Q), R_(R), x_(x0), P_(P0) {}
 
     void predict() {
+        pred_.cross = P_ * F_.transpose();
         x_ = F_ * x_;
         P_ = F_ * P_ * F_.transpose() + Q_;
         detail::symmetrize(P_);
+        record_prediction();
     }
 
     // Returns false (and leaves the estimate untouched) if the innovation
@@ -55,6 +58,9 @@ public:
     Scalar nis() const { return nis_; }
     const Measurement& innovation() const { return innovation_; }
 
+    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    const Prediction<N, Scalar>& last_prediction() const { return pred_; }
+
     void set_state(const State& x, const Cov& P) {
         x_ = x;
         P_ = P;
@@ -70,6 +76,12 @@ public:
     const MeasCov& measurement_noise() const { return R_; }
 
 private:
+    void record_prediction() {
+        pred_.x = x_;
+        pred_.P = P_;
+        ++pred_.sequence;
+    }
+
     Transition F_;
     Observation H_;
     Cov Q_;
@@ -78,6 +90,7 @@ private:
     Cov P_;
     Measurement innovation_ = Measurement::Zero();
     Scalar nis_ = Scalar(0);
+    Prediction<N, Scalar> pred_;
 };
 
 }  // namespace kalman
