@@ -16,6 +16,7 @@ First release.
   - `SquareRootUnscentedKalmanFilter`
   - `ErrorStateKalmanFilter`, for states on manifolds, with `SO3`
 - **Automatic Jacobians:** forward-mode autodiff (`Jet<T, N>`) integrated with Eigen. The EKF and error-state filter differentiate models templated on the scalar, and use hand-written Jacobians when a model provides them.
+- **Eigen 3.4 and 5.x:** both are supported and tested in CI. An installed Eigen is used when available; otherwise Eigen 3.4.0 is downloaded (`KALMAN_EIGEN_FETCH_TAG` picks another release).
 - **Compile-time checks:** C++20 concepts for process, measurement and manifold models, with measurement sizes checked at compile time.
 - **`RtsSmoother`:** works with every filter, including the unscented RTS smoother.
 - **`AsyncFusion`:** multi-rate, multi-sensor fusion with exact handling of out-of-sequence measurements (rewind and replay within a time horizon).

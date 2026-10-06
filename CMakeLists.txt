@@ -24,29 +24,32 @@ else()
     set(KALMAN_TOP_LEVEL OFF)
 endif()
 
-# Prefer an installed Eigen 3.4 (package managers provide one); download it
-# otherwise. Eigen 5's version rule rejects a 3.4 request, so an untested
-# major version is never picked up silently.
-option(KALMAN_FETCH_EIGEN "Download Eigen 3.4 if it is not installed" ON)
+# Prefer an installed Eigen (package managers provide one); download it
+# otherwise. Supported: Eigen 3.4 and 5.x, both tested in CI.
+option(KALMAN_FETCH_EIGEN "Download Eigen if it is not installed" ON)
+set(KALMAN_EIGEN_FETCH_TAG "3.4.0" CACHE STRING "Eigen release to download when it is not installed")
 # The user package registry is skipped: Eigen's own CMake registers every
 # build tree there, which would tie this build to some other build directory.
-find_package(Eigen3 3.4 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
+find_package(Eigen3 3.4...<6 QUIET NO_MODULE NO_CMAKE_PACKAGE_REGISTRY)
 if(Eigen3_FOUND)
     message(STATUS "kalman-cpp: using installed Eigen ${Eigen3_VERSION}")
 elseif(KALMAN_FETCH_EIGEN)
-    message(STATUS "kalman-cpp: downloading Eigen 3.4.0")
+    message(STATUS "kalman-cpp: downloading Eigen ${KALMAN_EIGEN_FETCH_TAG}")
     set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)  # don't let Eigen register this build tree
     set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
     set(EIGEN_BUILD_TESTING OFF CACHE BOOL "" FORCE)
     set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
+    # Eigen 5 only exports its target (needed by our install(EXPORT)) when it
+    # is the top-level project unless this is on; Eigen 3.4 always does.
+    set(EIGEN_BUILD_CMAKE_PACKAGE ON CACHE BOOL "" FORCE)
     set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(Eigen3
         GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-        GIT_TAG 3.4.0
+        GIT_TAG ${KALMAN_EIGEN_FETCH_TAG}
         GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(Eigen3)
 else()
-    message(FATAL_ERROR "kalman-cpp needs Eigen 3.4: install it or set KALMAN_FETCH_EIGEN=ON")
+    message(FATAL_ERROR "kalman-cpp needs Eigen 3.4 or 5.x: install it or set KALMAN_FETCH_EIGEN=ON")
 endif()
 
 add_library(kalman INTERFACE)

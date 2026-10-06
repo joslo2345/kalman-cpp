@@ -54,7 +54,8 @@ Packaging notes (Step 11):
 - **Version:** `include/kalman/version.hpp` is the single source. The top-level CMakeLists, `conanfile.py` and the test read it, so bump it there, then update `CHANGELOG.md` and `ports/kalman-cpp/vcpkg.json`.
 - **Eigen lookup:** `find_package(Eigen3 3.4 ... NO_CMAKE_PACKAGE_REGISTRY)`, falling back to downloading it when `KALMAN_FETCH_EIGEN=ON`.
   - The registry is skipped because Eigen's build trees register themselves there, which once made a fresh build silently use another build directory's Eigen.
-  - Eigen 5's version rule rejects a 3.4 request, so Homebrew's Eigen 5 is never picked up.
+  - Eigen 3.4 and 5.x are both supported (`3.4...<6`) and tested in CI (the `linux-clang-eigen5` matrix entry downloads 5.0.1). vcpkg's `eigen3` port is 5.x, so dropping 5.x support would break the port.
+  - A downloaded Eigen 5 only exports its target when `EIGEN_BUILD_CMAKE_PACKAGE=ON`, which our install(EXPORT) needs. Eigen 3.4 always exports it.
 - **Top-level defaults:** tests and examples default to ON only when this is the top-level project, so FetchContent consumers don't build them.
 - **CI packaging jobs:**
   - `install`: system Eigen, then `tests/install` as a consumer.

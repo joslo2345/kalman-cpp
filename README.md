@@ -206,7 +206,7 @@ Reproduce everything with one command: `./scripts/run_benchmarks.sh`. It writes 
 
 ## 🚀 Quick Start
 
-**Requirements:** CMake ≥ 3.20, a C++20 compiler and Eigen 3.4. An installed Eigen 3.4 is used if there is one; otherwise it is downloaded (`-DKALMAN_FETCH_EIGEN=OFF` turns that off).
+**Requirements:** CMake ≥ 3.20, a C++20 compiler and Eigen 3.4 or 5.x. An installed Eigen 3.4 is used if there is one; otherwise 3.4.0 is downloaded. `-DKALMAN_FETCH_EIGEN=OFF` turns that off, and `-DKALMAN_EIGEN_FETCH_TAG=5.0.1` picks another release.
 
 <details open>
 <summary><strong>Installation</strong>: CMake, Conan, vcpkg or ROS 2</summary>
