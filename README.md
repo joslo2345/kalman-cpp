@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/joslo2345/kalman-cpp/actions/workflows/ci.yml"><img src="https://github.com/joslo2345/kalman-cpp/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
   <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white" alt="C++20" />
   <img src="https://img.shields.io/badge/header--only-yes-success" alt="Header-only" />
   <img src="https://img.shields.io/badge/Eigen-3.4-8A2BE2" alt="Eigen 3.4" />
@@ -67,8 +68,8 @@ The compiler checks matrix dimensions. You write a nonlinear model once, and its
     <td valign="top"><strong>Benchmarks</strong>: five frozen scenarios, one command, and a published CSV. <a href="#benchmarks">Results →</a></td>
   </tr>
   <tr>
-    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_9-ready-007bff?style=flat-square" alt="ready" /></td>
-    <td valign="top"><strong>CI</strong>: the workflow is written and verified locally on macOS, and is waiting for its first GitHub run (Linux GCC/Clang, Windows MSVC)</td>
+    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_9-done-28a745?style=flat-square" alt="done" /></td>
+    <td valign="top"><strong>CI</strong>: green on Linux GCC/Clang, macOS AppleClang and Windows MSVC, plus sanitizers, clang-tidy, coverage and an OpenCV comparison job. <a href="https://github.com/joslo2345/kalman-cpp/actions">Actions →</a></td>
   </tr>
   <tr>
     <td align="right" valign="top"><img src="https://img.shields.io/badge/Steps_10–11-planned-6c757d?style=flat-square" alt="planned" /></td>
@@ -319,7 +320,6 @@ flowchart LR
 
 | Item | Description |
 |---|---|
-| **First CI run** | Push to GitHub and fix whatever Linux GCC, Windows MSVC and Ubuntu's OpenCV 4.x turn up. |
 | **Speed regression gate** | Fail CI when a release is more than 10% slower than the last one, once there is a release to compare against. |
 | **Close the small-problem gap** | Recover the 1.5× against mherb/kalman on 2–4-state filters without giving up the Joseph form. |
 | **Documentation** | Doxygen API reference, plus tutorials for a constant-velocity tracker, GPS+IMU fusion and attitude estimation. |

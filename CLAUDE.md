@@ -42,9 +42,10 @@ Done so far:
   - `average_bounds(dof, runs, confidence)` gives the interval for a Monte Carlo mean.
   - `ConsistencyCheck` accumulates per-step NEES/NIS across runs and reports `fraction_inside()`.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–9 are complete. CI has never run, because the repo has no GitHub remote yet.
-- **Verified locally on macOS:** format, AppleClang `-Werror`, ASan+UBSan, coverage (99.7% of library lines) and clang-tidy.
-- **Not verified:** GCC, MSVC, Linux Clang 18, and apt's OpenCV 4.x for the comparison job. Warnings are errors only for the Clang compilers.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–9 are complete. The repo is public at https://github.com/joslo2345/kalman-cpp, and CI is green on Linux GCC 14, Linux Clang 18, macOS AppleClang and Windows MSVC.
+- **Warnings:** they are errors only on the Clang jobs.
+- **MSVC quirk:** MSVC can't deduce template sizes through `Eigen::Matrix<Scalar, K, L>` parameters when K = 1. That's a row vector, whose default storage option depends on K and L. Read the sizes from the argument types instead (see `detail::sqrt_covariance`).
+- **Comparison job:** it uses Ubuntu's OpenCV 4.6 plus contrib. Frozen-vector results match macOS exactly.
 - **Speed regression gate:** the guide's ">10% slower than the last release" check isn't implemented, because there is no release baseline yet.
 
 The next step is Step 10: documentation.
