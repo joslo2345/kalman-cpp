@@ -30,3 +30,4 @@ else
 fi
 
 $PY scripts/make_table.py results/results.csv kalman-cpp --readme README.md
+$PY scripts/make_charts.py results/results.csv docs/assets

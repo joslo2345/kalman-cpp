@@ -140,6 +140,12 @@ CMAKE_ARGS="-G Ninja -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDK
 ```
 Python tooling uses the project-local `.venv/` (numpy, `scripts/requirements.txt`).
 
+README notes:
+- **Layout:** the README follows the CubeSandbox README's layout (centered header, badge rows, highlight-card tables).
+- **Charts:** `scripts/make_charts.py` (run by `run_benchmarks.sh`) generates the charts from `results/results.csv` into `docs/assets/`, in light and dark variants served through `<picture>`.
+- **Benchmark numbers by hand:** the hand-written summary table, the badges and the prose figures (tests count, coverage, speedups) don't update automatically. Edit them when the results change. Only the table between the BENCH markers is regenerated.
+- **Snippets:** README code snippets come from `examples/*.cpp`, which are built and run as ctest tests. Keep the two in sync.
+
 ## Architecture decisions
 
 - **Library target:** `kalman` is a CMake `INTERFACE` target, aliased as `kalman::kalman`. It pulls in Eigen 3.4.0 through FetchContent and requires `cxx_std_20`. Headers live in `include/kalman/`, and `kalman.hpp` is the umbrella header. Include `install()`/`export()` rules so `find_package(kalman)` works.

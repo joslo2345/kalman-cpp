@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="274" viewBox="0 0 760 274" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Steps survived out of one million in float32, higher is better">
+<title>Steps survived out of one million in float32, higher is better</title>
+<text x="16.0" y="28.0" fill="#1f2328" font-size="16" text-anchor="start" font-weight="600">Steps survived out of 1,000,000 (S4, float32)</text>
+<text x="16.0" y="48.0" fill="#59636e" font-size="12" text-anchor="start" font-weight="normal">Higher is better · vague prior (variance 1e6) vs precise measurements (variance 1e-6)</text>
+<text x="198.0" y="99.0" fill="#59636e" font-size="12" text-anchor="end" font-weight="normal">kalman-cpp (square-root KF)</text>
+<line x1="210" y1="95.0" x2="720" y2="95.0" stroke="#d1d9e0" stroke-width="1" stroke-dasharray="2 4"/>
+<path d="M210,88.0 h506.0 q4,0 4,4 v6.0 q0,4 -4,4 h-506.0 z" fill="#eb6834"/>
+<text x="220.0" y="99.5" fill="#ffffff" font-size="12" text-anchor="start" font-weight="600">never failed</text>
+<text x="198.0" y="133.0" fill="#59636e" font-size="12" text-anchor="end" font-weight="normal">kalman-cpp (Joseph KF)</text>
+<line x1="210" y1="129.0" x2="720" y2="129.0" stroke="#d1d9e0" stroke-width="1" stroke-dasharray="2 4"/>
+<circle cx="214" cy="129.0" r="5" fill="#2a78d6"/>
+<text x="226.0" y="133.5" fill="#1f2328" font-size="12" text-anchor="start" font-weight="normal">lost a valid covariance at step 1</text>
+<text x="198.0" y="167.0" fill="#59636e" font-size="12" text-anchor="end" font-weight="normal">mherb/kalman</text>
+<line x1="210" y1="163.0" x2="720" y2="163.0" stroke="#d1d9e0" stroke-width="1" stroke-dasharray="2 4"/>
+<circle cx="214" cy="163.0" r="5" fill="#1baf7a"/>
+<text x="226.0" y="167.5" fill="#1f2328" font-size="12" text-anchor="start" font-weight="normal">lost a valid covariance at step 0</text>
+<text x="198.0" y="201.0" fill="#59636e" font-size="12" text-anchor="end" font-weight="normal">naive textbook KF</text>
+<line x1="210" y1="197.0" x2="720" y2="197.0" stroke="#d1d9e0" stroke-width="1" stroke-dasharray="2 4"/>
+<circle cx="214" cy="197.0" r="5" fill="#e87ba4"/>
+<text x="226.0" y="201.5" fill="#1f2328" font-size="12" text-anchor="start" font-weight="normal">lost a valid covariance at step 0</text>
+<text x="198.0" y="235.0" fill="#59636e" font-size="12" text-anchor="end" font-weight="normal">OpenCV</text>
+<line x1="210" y1="231.0" x2="720" y2="231.0" stroke="#d1d9e0" stroke-width="1" stroke-dasharray="2 4"/>
+<circle cx="214" cy="231.0" r="5" fill="#eda100"/>
+<text x="226.0" y="235.5" fill="#1f2328" font-size="12" text-anchor="start" font-weight="normal">lost a valid covariance at step 0</text>
+<line x1="210" y1="78" x2="210" y2="248" stroke="#59636e" stroke-width="1"/>
+<text x="210.0" y="264.0" fill="#59636e" font-size="11" text-anchor="middle" font-weight="normal">0</text>
+<text x="465.0" y="264.0" fill="#59636e" font-size="11" text-anchor="middle" font-weight="normal">500k</text>
+<text x="720.0" y="264.0" fill="#59636e" font-size="11" text-anchor="middle" font-weight="normal">1M</text>
+</svg>
