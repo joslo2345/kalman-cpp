@@ -61,7 +61,13 @@ Packaging notes (Step 11):
   - `install`: system Eigen, then `tests/install` as a consumer.
   - `conan`: `conan create` with `test_package/`.
   - `ros2`: the `ros:jazzy-ros-base` container builds `ros2/kalman_tracker` with colcon and smoke-tests it with out-of-order stamps.
-- **vcpkg overlay port:** `ports/kalman-cpp`. Its SHA512 is for the GitHub tarball of the `v<version>` tag; recompute it on every release.
+- **vcpkg overlay port:** `ports/kalman-cpp`. Its SHA512 is for the GitHub tarball of the `v<version>` tag; recompute it on every release with `vcpkg hash <tarball>`.
+  - The port builds the released tag, not the current commit. The CI `vcpkg` job installs it and builds `tests/install` through the vcpkg toolchain.
+  - vcpkg's `eigen3` is 5.x.
+- **Releases:**
+  - Tag `v<version>` only on a commit whose CI and Docs runs are green.
+  - Publish with `gh release create`, using the CHANGELOG section as the notes.
+  - v0.1.0 is tagged on `fb43e34`.
 - **Local Conan:** set `CONAN_HOME` to a scratch directory and pass `-c tools.apple:sdk_path=<MacOSX26.5.sdk>` because of the SDK quirk.
 - **MSVC and aligned Eigen types:** `std::stable_sort` (and anything else that uses `aligned_storage`) rejects 16-byte-aligned Eigen members in a struct. Avoid it in examples rather than defining `_ENABLE_EXTENDED_ALIGNED_STORAGE`.
 - **API reference:** built by Doxygen 1.9+ with the doxygen-awesome theme v2.5.0 (v2.3.x had unreadable inline code in dark mode with doxygen 1.18). Build it with `cmake -B build -DKALMAN_BUILD_DOCS=ON && cmake --build build --target docs`.

@@ -165,6 +165,21 @@ jobs:
       - name: Create the package and run test_package
         run: conan create . --build=missing -s compiler.cppstd=20
 
+  # The vcpkg overlay port (it builds the released tag), then a consumer
+  # through the vcpkg toolchain.
+  vcpkg:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the port
+        run: $VCPKG_INSTALLATION_ROOT/vcpkg install kalman-cpp --overlay-ports=ports
+      - name: Build and run a consumer
+        run: |
+          cmake -S tests/install -B build-consumer \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+          cmake --build build-consumer
+          ./build-consumer/consumer
+
   # The ROS 2 example package, built with colcon and smoke-tested end to end.
   ros2:
     runs-on: ubuntu-24.04

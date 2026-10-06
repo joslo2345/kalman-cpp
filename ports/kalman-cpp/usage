@@ -1,0 +1,4 @@
+kalman-cpp is header-only. It provides CMake targets:
+
+  find_package(kalman CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE kalman::kalman)
