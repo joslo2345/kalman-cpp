@@ -40,7 +40,12 @@ Done so far:
   - `average_bounds(dof, runs, confidence)` gives the interval for a Monte Carlo mean.
   - `ConsistencyCheck` accumulates per-step NEES/NIS across runs and reports `fraction_inside()`.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–6 are complete, and so is Step 7 except the OpenCV comparison tests (`tests/comparison/`). Those, and the Step 8 benchmarks, need OpenCV, which isn't installed. Step 9 (CI) doesn't depend on it.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–7 are complete. OpenCV 5.0 is installed through Homebrew. The `comparison_tests` executable builds only when CMake finds OpenCV, and it covers:
+- equivalence with `cv::KalmanFilter` to 1e-9
+- float stability over 1M steps
+- the UKF against an EKF built on OpenCV's linear filter
+
+The next step is Step 8: the benchmark harness against OpenCV and mherb/kalman.
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
@@ -65,6 +70,13 @@ Testing notes for the error-state filter:
 - Convergence and NEES are insensitive to the reset Jacobian G, which is close to the identity for small corrections.
 - G is pinned down only by the analytic single-update test in `test_error_state.cpp`. It uses a correction of about 0.3 rad and compares against `blockdiag(J_r(δθ), I)`.
 - The ESKF NEES bound is DoF ± 40%, because means over 20-seed blocks ranged from 5.1 to 6.9.
+
+Notes on the comparison tests:
+- **OpenCV-based EKF baseline:** `run_opencv_ekf` re-linearizes `measurementMatrix` each step and passes the pseudo-measurement `z − h(x̂) + H·x̂`, so OpenCV's linear residual equals the EKF innovation. A test checks that it agrees with our EKF before any claim is made against it.
+- **Stability failure is real:** in the stability scenario (prior variance 1e6, measurement variance 1e-6, float precision), OpenCV's short-form `P − K·H·P` collapses the position variances to exactly 0 at step 0. The Joseph form is what prevents this; swapping in the short form makes our filter fail as well.
+- **Fair SPD check:** `is_spd` there uses a symmetry tolerance relative to the matrix's scale, so ordinary float round-off isn't counted as a failure.
+- **Catch2 gotcha:** `UNSCOPED_INFO` only prints when an assertion follows it, so a `[report]` line at the end of a test needs a trailing `SUCCEED()`.
+- **Linker warnings:** with the macOS 26.5 SDK workaround, linking OpenCV warns that the dylibs were built for macOS 27. The warnings are harmless.
 
 `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
 

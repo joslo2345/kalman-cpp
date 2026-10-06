@@ -22,7 +22,15 @@ catch_discover_tests(unit_tests)
 # OpenCV is an optional, test-only dependency for comparison tests.
 find_package(OpenCV QUIET COMPONENTS core video)
 if(OpenCV_FOUND)
-    # Add comparison/*.cpp here once they exist (see guide Step 7).
+    add_executable(comparison_tests
+        comparison/test_equivalence.cpp
+        comparison/test_stability.cpp
+        comparison/test_nonlinear.cpp)
+    target_include_directories(comparison_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${OpenCV_INCLUDE_DIRS})
+    target_link_libraries(comparison_tests PRIVATE kalman::kalman Catch2::Catch2WithMain ${OpenCV_LIBS})
+    catch_discover_tests(comparison_tests)
+else()
+    message(STATUS "OpenCV not found: comparison tests disabled")
 endif()
 
 # Code that must NOT compile. Each target is excluded from the normal build and
