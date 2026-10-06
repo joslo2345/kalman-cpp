@@ -1,0 +1,43 @@
+# Doxygen configuration for the kalman-cpp API reference.
+# Configured by CMake (docs/CMakeLists.txt); build with `cmake --build build --target docs`.
+PROJECT_NAME           = "kalman-cpp"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "Header-only C++20 Kalman filters"
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
+INPUT                  = @PROJECT_SOURCE_DIR@/docs/mainpage.md \
+                         @PROJECT_SOURCE_DIR@/docs/tutorials \
+                         @PROJECT_SOURCE_DIR@/include/kalman
+FILE_PATTERNS          = *.hpp *.md
+RECURSIVE              = NO
+EXCLUDE_SYMBOLS        = kalman::detail Eigen
+USE_MDFILE_AS_MAINPAGE = @PROJECT_SOURCE_DIR@/docs/mainpage.md
+STRIP_FROM_PATH        = @PROJECT_SOURCE_DIR@/include @PROJECT_SOURCE_DIR@
+STRIP_FROM_INC_PATH    = @PROJECT_SOURCE_DIR@/include
+EXAMPLE_PATH           = @PROJECT_SOURCE_DIR@/examples
+IMAGE_PATH             = @PROJECT_SOURCE_DIR@/docs/assets
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+JAVADOC_AUTOBRIEF      = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+HIDE_UNDOC_MEMBERS     = NO
+SHOW_INCLUDE_FILES     = YES
+SORT_MEMBER_DOCS       = NO
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_AS_ERROR          = @DOXYGEN_WARN_AS_ERROR@
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+HTML_EXTRA_STYLESHEET  = @AWESOME_CSS@ @AWESOME_SIDEBAR_CSS@
+HTML_COLORSTYLE        = LIGHT
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+HAVE_DOT               = NO
+CLASS_GRAPH            = NO
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+PREDEFINED             = EIGEN_STRONG_INLINE=inline

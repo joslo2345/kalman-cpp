@@ -20,7 +20,7 @@ Eigen::Matrix<T, 3, 3> skew(const Eigen::Matrix<T, 3, 1>& v) {
     return S;
 }
 
-// Rotation vector (axis * angle) to unit quaternion.
+/// Rotation vector (axis * angle) to unit quaternion.
 template <typename T>
 Eigen::Quaternion<T> exp(const Eigen::Matrix<T, 3, 1>& w) {
     using std::cos;
@@ -37,7 +37,7 @@ Eigen::Quaternion<T> exp(const Eigen::Matrix<T, 3, 1>& w) {
     return Eigen::Quaternion<T>(cos(theta / T(2)), v(0), v(1), v(2));
 }
 
-// Unit quaternion to rotation vector, with angle in [0, pi].
+/// Unit quaternion to rotation vector, with angle in [0, pi].
 template <typename T>
 Eigen::Matrix<T, 3, 1> log(const Eigen::Quaternion<T>& q_in) {
     using std::atan2;
@@ -56,8 +56,8 @@ Eigen::Matrix<T, 3, 1> log(const Eigen::Quaternion<T>& q_in) {
 
 }  // namespace so3
 
-// Orientation as a manifold state for ErrorStateKalmanFilter, with right
-// (body-frame) perturbations: q [+] d = q * exp(d), and a [-] b = log(b^-1 a).
+/// Orientation as a manifold state for ErrorStateKalmanFilter, with right
+/// (body-frame) perturbations: q [+] d = q * exp(d), and a [-] b = log(b^-1 a).
 template <typename T>
 struct SO3 {
     static constexpr int DoF = 3;

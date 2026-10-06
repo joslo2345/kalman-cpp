@@ -9,11 +9,11 @@
 
 namespace kalman {
 
-// Forward-mode dual number: a value plus its gradient with respect to N inputs.
-//
-// Models opt into autodiff by being templated on the scalar type and calling
-// math functions unqualified (`using std::sin; sin(x(0))`) so that argument-
-// dependent lookup finds the overloads below when the scalar is a Jet.
+/// Forward-mode dual number: a value plus its gradient with respect to N inputs.
+///
+/// Models opt into autodiff by being templated on the scalar type and calling
+/// math functions unqualified (`using std::sin; sin(x(0))`) so that argument-
+/// dependent lookup finds the overloads below when the scalar is a Jet.
 template <typename T, int N>
 struct Jet {
     using Derivative = Eigen::Matrix<T, N, 1>;
@@ -24,7 +24,7 @@ struct Jet {
     Jet() = default;
     Jet(const T& value) : a(value) {}  // NOLINT(google-explicit-constructor)
     Jet(const T& value, const Derivative& grad) : a(value), v(grad) {}
-    // Seeds the i-th input variable: derivative is the i-th unit vector.
+    /// Seeds the i-th input variable: derivative is the i-th unit vector.
     Jet(const T& value, int i) : a(value) { v(i) = T(1); }
 
     Jet& operator+=(const Jet& b) {
@@ -58,8 +58,8 @@ struct Jet {
         return *this;
     }
 
-    // Hidden friends, so mixed Jet/scalar expressions work with implicit
-    // conversions (e.g. `x(0) * 2` with T = double).
+    /// Hidden friends, so mixed Jet/scalar expressions work with implicit
+    /// conversions (e.g. `x(0) * 2` with T = double).
     friend Jet operator+(const Jet& f) { return f; }
     friend Jet operator-(const Jet& f) { return Jet(-f.a, -f.v); }
 
@@ -86,7 +86,7 @@ struct Jet {
         return Jet(q, g.v * (-q / g.a));
     }
 
-    // Comparisons use the value only.
+    /// Comparisons use the value only.
     friend bool operator==(const Jet& f, const Jet& g) { return f.a == g.a; }
     friend bool operator!=(const Jet& f, const Jet& g) { return f.a != g.a; }
     friend bool operator<(const Jet& f, const Jet& g) { return f.a < g.a; }
@@ -239,8 +239,8 @@ auto call_model(const F& f, const Vec& x) {
 
 }  // namespace detail
 
-// Evaluates y = f(x) and its Jacobian dy/dx in one forward pass. `f` is either a
-// callable or a measurement model with a templated `measure(x)`.
+/// Evaluates y = f(x) and its Jacobian dy/dx in one forward pass. `f` is either a
+/// callable or a measurement model with a templated `measure(x)`.
 template <typename F, typename Scalar, int N>
 auto value_and_jacobian(const F& f, const Eigen::Matrix<Scalar, N, 1>& x) {
     using J = Jet<Scalar, N>;

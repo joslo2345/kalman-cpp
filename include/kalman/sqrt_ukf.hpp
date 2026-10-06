@@ -11,12 +11,12 @@
 
 namespace kalman {
 
-// Square-root unscented Kalman filter (Van der Merwe & Wan, 2001).
-//
-// Propagates the lower Cholesky factor S of the covariance (P = S S^T) through
-// QR decompositions and rank-1 Cholesky updates, so P is positive
-// semi-definite by construction, and the factor needs no re-decomposition at
-// each step. Same model interface as UnscentedKalmanFilter.
+/// Square-root unscented Kalman filter (Van der Merwe & Wan, 2001).
+///
+/// Propagates the lower Cholesky factor S of the covariance (P = S S^T) through
+/// QR decompositions and rank-1 Cholesky updates, so P is positive
+/// semi-definite by construction, and the factor needs no re-decomposition at
+/// each step. Same model interface as UnscentedKalmanFilter.
 template <int N, typename Scalar = double>
 class SquareRootUnscentedKalmanFilter {
     static_assert(N > 0, "state size must be positive");
@@ -26,14 +26,14 @@ public:
     using State = Eigen::Matrix<Scalar, N, 1>;
     using Cov = Eigen::Matrix<Scalar, N, N>;
 
-    // Throws std::invalid_argument if P0 is not positive-definite.
+    /// Throws std::invalid_argument if P0 is not positive-definite.
     SquareRootUnscentedKalmanFilter(const State& x0, const Cov& P0, const UnscentedParams& params = {})
         : x_(x0), w_(params) {
         if (!set_state(x0, P0)) throw std::invalid_argument("P0 must be positive-definite");
     }
 
-    // Q may be positive semi-definite. Returns false (and leaves the estimate
-    // untouched) if the propagated factor would be singular.
+    /// Q may be positive semi-definite. Returns false (and leaves the estimate
+    /// untouched) if the propagated factor would be singular.
     template <ProcessModel<N, Scalar> Model>
     bool predict(const Model& f, double dt, const Cov& Q) {
         const auto X = detail::sigma_points<N, Scalar>(x_, S_, w_.gamma);
@@ -57,8 +57,8 @@ public:
         return true;
     }
 
-    // R must be positive-definite. Returns false (and leaves the estimate
-    // untouched) if R is not, or if the covariance downdate fails.
+    /// R must be positive-definite. Returns false (and leaves the estimate
+    /// untouched) if R is not, or if the covariance downdate fails.
     template <int Mz, typename Model>
         requires MeasurementModel<Model, N, Mz, Scalar>
     bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
@@ -105,17 +105,17 @@ public:
 
     const State& state() const { return x_; }
     Cov covariance() const { return S_ * S_.transpose(); }
-    // Lower-triangular factor S with P = S S^T.
+    /// Lower-triangular factor S with P = S S^T.
     const Cov& sqrt_covariance() const { return S_; }
 
-    // Normalized innovation squared from the last successful update.
+    /// Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
-    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    /// Mean, covariance and cross-covariance from the last predict(), for smoothing.
     const Prediction<N, Scalar>& last_prediction() const { return pred_; }
 
-    // Returns false (and leaves the estimate untouched) if P is not
-    // positive-definite.
+    /// Returns false (and leaves the estimate untouched) if P is not
+    /// positive-definite.
     bool set_state(const State& x, const Cov& P) {
         const Eigen::LLT<Cov> llt(P);
         if (llt.info() != Eigen::Success) return false;

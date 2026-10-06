@@ -10,12 +10,12 @@
 
 namespace kalman {
 
-// Unscented Kalman filter with fixed state size N and additive noise.
-//
-// Uses the same model interface as ExtendedKalmanFilter, but needs no
-// Jacobians: `predict(x, dt)` and `measure(x)` only have to accept plain
-// vectors. A measurement model's optional `residual(z, z_pred)` is also used
-// when averaging sigma points, so angles near +/-pi are handled correctly.
+/// Unscented Kalman filter with fixed state size N and additive noise.
+///
+/// Uses the same model interface as ExtendedKalmanFilter, but needs no
+/// Jacobians: `predict(x, dt)` and `measure(x)` only have to accept plain
+/// vectors. A measurement model's optional `residual(z, z_pred)` is also used
+/// when averaging sigma points, so angles near +/-pi are handled correctly.
 template <int N, typename Scalar = double>
 class UnscentedKalmanFilter {
     static_assert(N > 0, "state size must be positive");
@@ -28,8 +28,8 @@ public:
     UnscentedKalmanFilter(const State& x0, const Cov& P0, const UnscentedParams& params = {})
         : x_(x0), P_(P0), w_(params) {}
 
-    // Returns false (and leaves the estimate untouched) if P is not
-    // positive-definite.
+    /// Returns false (and leaves the estimate untouched) if P is not
+    /// positive-definite.
     template <ProcessModel<N, Scalar> Model>
     bool predict(const Model& f, double dt, const Cov& Q) {
         const Eigen::LLT<Cov> llt(P_);
@@ -57,8 +57,8 @@ public:
         return true;
     }
 
-    // Returns false (and leaves the estimate untouched) if P or the innovation
-    // covariance is not positive-definite.
+    /// Returns false (and leaves the estimate untouched) if P or the innovation
+    /// covariance is not positive-definite.
     template <int Mz, typename Model>
         requires MeasurementModel<Model, N, Mz, Scalar>
     bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
@@ -99,10 +99,10 @@ public:
     const State& state() const { return x_; }
     const Cov& covariance() const { return P_; }
 
-    // Normalized innovation squared from the last successful update.
+    /// Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
-    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    /// Mean, covariance and cross-covariance from the last predict(), for smoothing.
     const Prediction<N, Scalar>& last_prediction() const { return pred_; }
 
     void set_state(const State& x, const Cov& P) {

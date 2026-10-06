@@ -11,18 +11,20 @@
 
 namespace kalman {
 
-// A state living on a manifold (e.g. an orientation), described by a class
-// template S<T> so it can be instantiated with autodiff jets:
-//
-//   template <typename T> struct S {
-//       static constexpr int DoF = ...;                    // tangent dimension
-//       S boxplus(const Eigen::Matrix<T, DoF, 1>& d) const;  // x [+] d
-//       Eigen::Matrix<T, DoF, 1> boxminus(const S& y) const; // x [-] y
-//       template <typename U> S<U> cast() const;
-//   };
-//
-// See kalman::SO3 for an example; product states (e.g. orientation + gyro bias)
-// combine the pieces' operators block by block.
+/// A state living on a manifold (e.g. an orientation), described by a class
+/// template S<T> so it can be instantiated with autodiff jets:
+///
+/// \code
+///   template <typename T> struct S {
+///       static constexpr int DoF = ...;                    // tangent dimension
+///       S boxplus(const Eigen::Matrix<T, DoF, 1>& d) const;  // x [+] d
+///       Eigen::Matrix<T, DoF, 1> boxminus(const S& y) const; // x [-] y
+///       template <typename U> S<U> cast() const;
+///   };
+/// \endcode
+///
+/// See kalman::SO3 for an example; product states (e.g. orientation + gyro bias)
+/// combine the pieces' operators block by block.
 template <template <typename> class S, typename Scalar>
 concept ManifoldState = requires(const S<Scalar> x, const Eigen::Matrix<Scalar, S<Scalar>::DoF, 1>& d) {
     { x.boxplus(d) } -> std::same_as<S<Scalar>>;
@@ -30,19 +32,21 @@ concept ManifoldState = requires(const S<Scalar> x, const Eigen::Matrix<Scalar, 
     { x.template cast<Jet<Scalar, S<Scalar>::DoF>>() } -> std::same_as<S<Jet<Scalar, S<Scalar>::DoF>>>;
 };
 
-// Error-state (multiplicative) extended Kalman filter on a manifold.
-//
-// The filter keeps a nominal state x on the manifold and a Gaussian over the
-// error d in its tangent space (true state = x [+] d). Every Jacobian is
-// computed by autodiff through the model and the state's [+]/[-] operators, so
-// models and states must be templated on the scalar:
-//
-//   process:      F = d/dd [ f(x [+] d) [-] f(x) ]           at d = 0
-//   measurement:  H = d/dd h(x [+] d)                        at d = 0
-//   reset:        G = d/de [ (x [+] e) [-] (x [+] d_hat) ]   at e = d_hat
-//
-// After each update the estimated error d_hat is folded into x, and P is
-// mapped into the tangent space of the new nominal state with G.
+/// Error-state (multiplicative) extended Kalman filter on a manifold.
+///
+/// The filter keeps a nominal state x on the manifold and a Gaussian over the
+/// error d in its tangent space (true state = x [+] d). Every Jacobian is
+/// computed by autodiff through the model and the state's [+]/[-] operators, so
+/// models and states must be templated on the scalar:
+///
+/// \verbatim
+///   process:      F = d/dd [ f(x [+] d) [-] f(x) ]           at d = 0
+///   measurement:  H = d/dd h(x [+] d)                        at d = 0
+///   reset:        G = d/de [ (x [+] e) [-] (x [+] d_hat) ]   at e = d_hat
+/// \endverbatim
+///
+/// After each update the estimated error d_hat is folded into x, and P is
+/// mapped into the tangent space of the new nominal state with G.
 template <template <typename> class S, typename Scalar = double>
     requires ManifoldState<S, Scalar>
 class ErrorStateKalmanFilter {
@@ -54,7 +58,7 @@ public:
 
     ErrorStateKalmanFilter(const State& x0, const Cov& P0) : x_(x0), P_(P0) {}
 
-    // f.predict(x, dt) must be templated on the scalar and return S<T>.
+    /// f.predict(x, dt) must be templated on the scalar and return S<T>.
     template <typename Model>
     void predict(const Model& f, double dt, const Cov& Q) {
         static_assert(std::same_as<std::remove_cvref_t<decltype(f.predict(std::declval<const S<J>&>(), dt))>, S<J>>,
@@ -69,10 +73,10 @@ public:
         detail::symmetrize(P_);
     }
 
-    // h.measure(x) must be templated on the scalar and return a fixed-size
-    // vector. An optional h.residual(z, z_pred) handles wrapped quantities.
-    // Returns false (and leaves the estimate untouched) if the innovation
-    // covariance is not positive-definite.
+    /// h.measure(x) must be templated on the scalar and return a fixed-size
+    /// vector. An optional h.residual(z, z_pred) handles wrapped quantities.
+    /// Returns false (and leaves the estimate untouched) if the innovation
+    /// covariance is not positive-definite.
     template <int Mz, typename Model>
         requires requires(const Model h, const State x) {
             { h.measure(x) } -> detail::HasShape<Mz>;
@@ -114,7 +118,7 @@ public:
     const State& state() const { return x_; }
     const Cov& covariance() const { return P_; }
 
-    // Normalized innovation squared from the last successful update.
+    /// Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
     void set_state(const State& x, const Cov& P) {
@@ -125,7 +129,7 @@ public:
 private:
     using J = Jet<Scalar, N>;
 
-    // x [+] d with d = 0 seeded as the N autodiff inputs.
+    /// x [+] d with d = 0 seeded as the N autodiff inputs.
     S<J> perturbed() const {
         Eigen::Matrix<J, N, 1> d;
         for (int i = 0; i < N; ++i) d(i) = J(Scalar(0), i);

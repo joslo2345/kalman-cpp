@@ -48,7 +48,12 @@ The KF and EKF share `detail::joseph_update`, which uses an LLT solve and return
 - **Comparison job:** it uses Ubuntu's OpenCV 4.6 plus contrib. Frozen-vector results match macOS exactly.
 - **Speed regression gate:** the guide's ">10% slower than the last release" check isn't implemented, because there is no release baseline yet.
 
-The next step is Step 10: documentation.
+Step 10 (documentation) is done. The next step is Step 11: packaging.
+- **API reference:** built by Doxygen 1.9+ with the doxygen-awesome theme v2.5.0 (v2.3.x had unreadable inline code in dark mode with doxygen 1.18). Build it with `cmake -B build -DKALMAN_BUILD_DOCS=ON && cmake --build build --target docs`.
+- **Publishing:** `.github/workflows/docs.yml` builds with warnings as errors and deploys to GitHub Pages (https://joslo2345.github.io/kalman-cpp/).
+- **Doc comments:** documentation comments in public headers use `///`. Code samples inside them must be wrapped in `\code`/`\endcode` and formulas in `\verbatim`; otherwise Doxygen parses `<typename T>` as HTML.
+- **Path leak:** `STRIP_FROM_PATH` must include the project root, or the markdown pages' file names embed the absolute local path.
+- **Tutorials:** `docs/tutorials/*.md`, each backed by `examples/tutorial_*.cpp`. The examples run as ctest tests and exit non-zero if their accuracy checks fail. Keep the excerpts in the markdown in sync with the examples.
 
 OpenCV 5.0 (Homebrew, including the contrib modules) is installed. The `comparison_tests` executable builds only when CMake finds OpenCV.
 

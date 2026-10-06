@@ -9,23 +9,25 @@
 
 namespace kalman {
 
-// Extended Kalman filter with fixed state size N.
-//
-// Models are passed per call, so one filter can fuse several sensors with
-// different measurement sizes; each size is still checked at compile time.
-//
-// Jacobians come from the model when it provides them (`jacobian(x, dt)` for
-// process models, `jacobian(x)` for measurement models). Otherwise the model
-// must be templated on its scalar type and the Jacobian is computed by
-// forward-mode autodiff:
-//
-//   struct Model {
-//       template <typename T>
-//       Eigen::Matrix<T, N, 1> predict(const Eigen::Matrix<T, N, 1>& x, double dt) const;
-//   };
-//
-// Measurement models may define `residual(z, z_pred)` for quantities such as
-// angles, where the innovation is not a plain subtraction.
+/// Extended Kalman filter with fixed state size N.
+///
+/// Models are passed per call, so one filter can fuse several sensors with
+/// different measurement sizes; each size is still checked at compile time.
+///
+/// Jacobians come from the model when it provides them (`jacobian(x, dt)` for
+/// process models, `jacobian(x)` for measurement models). Otherwise the model
+/// must be templated on its scalar type and the Jacobian is computed by
+/// forward-mode autodiff:
+///
+/// \code
+///   struct Model {
+///       template <typename T>
+///       Eigen::Matrix<T, N, 1> predict(const Eigen::Matrix<T, N, 1>& x, double dt) const;
+///   };
+/// \endcode
+///
+/// Measurement models may define `residual(z, z_pred)` for quantities such as
+/// angles, where the innovation is not a plain subtraction.
 template <int N, typename Scalar = double>
 class ExtendedKalmanFilter {
     static_assert(N > 0, "state size must be positive");
@@ -58,8 +60,8 @@ public:
         ++pred_.sequence;
     }
 
-    // Returns false (and leaves the estimate untouched) if the innovation
-    // covariance is not positive-definite.
+    /// Returns false (and leaves the estimate untouched) if the innovation
+    /// covariance is not positive-definite.
     template <int Mz, typename Model>
         requires MeasurementModel<Model, N, Mz, Scalar>
     bool update(const Model& h, const Eigen::Matrix<Scalar, Mz, 1>& z, const Eigen::Matrix<Scalar, Mz, Mz>& R) {
@@ -89,10 +91,10 @@ public:
     const State& state() const { return x_; }
     const Cov& covariance() const { return P_; }
 
-    // Normalized innovation squared from the last successful update.
+    /// Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
 
-    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    /// Mean, covariance and cross-covariance from the last predict(), for smoothing.
     const Prediction<N, Scalar>& last_prediction() const { return pred_; }
 
     void set_state(const State& x, const Cov& P) {

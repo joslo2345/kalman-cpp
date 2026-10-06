@@ -6,8 +6,8 @@
 
 namespace kalman {
 
-// What a filter's predict() step produced, kept so that a smoother can run the
-// backward pass later.
+/// What a filter's predict() step produced, kept so that a smoother can run the
+/// backward pass later.
 template <int N, typename Scalar = double>
 struct Prediction {
     Eigen::Matrix<Scalar, N, 1> x = Eigen::Matrix<Scalar, N, 1>::Zero();      // x_{k|k-1}

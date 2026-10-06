@@ -11,8 +11,8 @@
 
 namespace kalman::diagnostics {
 
-// Normalized estimation error squared, e^T P^-1 e, where e = true - estimate.
-// For a consistent filter it is chi-square distributed with N degrees of freedom.
+/// Normalized estimation error squared, e^T P^-1 e, where e = true - estimate.
+/// For a consistent filter it is chi-square distributed with N degrees of freedom.
 template <int N, typename Scalar>
 Scalar nees(const Eigen::Matrix<Scalar, N, 1>& error, const Eigen::Matrix<Scalar, N, N>& P) {
     const Eigen::LLT<Eigen::Matrix<Scalar, N, N>> llt(P);
@@ -20,16 +20,16 @@ Scalar nees(const Eigen::Matrix<Scalar, N, 1>& error, const Eigen::Matrix<Scalar
     return error.dot(llt.solve(error));
 }
 
-// Normalized innovation squared, y^T S^-1 y. Same distribution, with the
-// measurement dimension as degrees of freedom. (Every filter also reports the
-// NIS of its last update through nis().)
+/// Normalized innovation squared, y^T S^-1 y. Same distribution, with the
+/// measurement dimension as degrees of freedom. (Every filter also reports the
+/// NIS of its last update through nis().)
 template <int M, typename Scalar>
 Scalar nis(const Eigen::Matrix<Scalar, M, 1>& innovation, const Eigen::Matrix<Scalar, M, M>& S) {
     return nees(innovation, S);
 }
 
-// Regularized lower incomplete gamma function P(a, x) (Numerical Recipes 6.2):
-// a series for x < a + 1, a continued fraction otherwise.
+/// Regularized lower incomplete gamma function P(a, x) (Numerical Recipes 6.2):
+/// a series for x < a + 1, a continued fraction otherwise.
 inline double regularized_gamma_p(double a, double x) {
     if (a <= 0.0 || x < 0.0) throw std::invalid_argument("regularized_gamma_p: need a > 0 and x >= 0");
     if (x == 0.0) return 0.0;
@@ -66,7 +66,7 @@ inline double regularized_gamma_p(double a, double x) {
 
 inline double chi2_cdf(double x, double dof) { return x <= 0.0 ? 0.0 : regularized_gamma_p(dof / 2.0, x / 2.0); }
 
-// Inverse chi-square CDF, by bisection on the CDF.
+/// Inverse chi-square CDF, by bisection on the CDF.
 inline double chi2_quantile(double p, double dof) {
     if (!(p > 0.0 && p < 1.0)) throw std::invalid_argument("chi2_quantile: p must be in (0, 1)");
     if (!(dof > 0.0)) throw std::invalid_argument("chi2_quantile: dof must be positive");
@@ -85,9 +85,9 @@ struct Bounds {
     bool contains(double value) const { return value >= lower && value <= upper; }
 };
 
-// Two-sided interval for the mean of `samples` independent chi2(dof) values:
-// the sum is chi2(dof * samples), so the mean lies within
-// [q(a/2), q(1 - a/2)] / samples with probability `confidence`.
+/// Two-sided interval for the mean of `samples` independent chi2(dof) values:
+/// the sum is chi2(dof * samples), so the mean lies within
+/// [q(a/2), q(1 - a/2)] / samples with probability `confidence`.
 inline Bounds average_bounds(int dof, int samples, double confidence = 0.95) {
     if (dof <= 0 || samples <= 0) throw std::invalid_argument("average_bounds: dof and samples must be positive");
     const double alpha = 1.0 - confidence;
@@ -95,10 +95,10 @@ inline Bounds average_bounds(int dof, int samples, double confidence = 0.95) {
     return {chi2_quantile(alpha / 2, total) / samples, chi2_quantile(1 - alpha / 2, total) / samples};
 }
 
-// Monte Carlo consistency check (Bar-Shalom et al.): run the same filter on
-// `runs` independent realizations, add each run's NEES (or NIS) at every time
-// step, then compare the per-step average with the chi-square interval. For a
-// consistent filter about `confidence` of the steps fall inside.
+/// Monte Carlo consistency check (Bar-Shalom et al.): run the same filter on
+/// `runs` independent realizations, add each run's NEES (or NIS) at every time
+/// step, then compare the per-step average with the chi-square interval. For a
+/// consistent filter about `confidence` of the steps fall inside.
 class ConsistencyCheck {
 public:
     ConsistencyCheck(int dof, int runs, std::size_t steps) : dof_(dof), runs_(runs), sums_(steps, 0.0) {}
@@ -107,14 +107,14 @@ public:
 
     double average(std::size_t step) const { return sums_.at(step) / runs_; }
 
-    // Mean over all steps of the per-step averages; about dof when consistent.
+    /// Mean over all steps of the per-step averages; about dof when consistent.
     double overall_average() const {
         double total = 0.0;
         for (double s : sums_) total += s;
         return total / (static_cast<double>(runs_) * static_cast<double>(sums_.size()));
     }
 
-    // Fraction of steps whose average lies inside the interval.
+    /// Fraction of steps whose average lies inside the interval.
     double fraction_inside(double confidence = 0.95) const {
         const Bounds b = average_bounds(dof_, runs_, confidence);
         std::size_t inside = 0;

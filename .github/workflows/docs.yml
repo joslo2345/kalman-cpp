@@ -1,0 +1,47 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen
+      - name: Configure
+        run: >
+          cmake -B build -DKALMAN_BUILD_TESTS=OFF -DKALMAN_BUILD_EXAMPLES=OFF
+          -DKALMAN_BUILD_DOCS=ON -DKALMAN_DOCS_WARN_AS_ERROR=ON
+      - name: Build the API reference
+        run: cmake --build build --target docs
+      - name: Check for local paths in the site
+        run: "! grep -rIl '/home/runner' build/docs/html"
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push'
+        with:
+          path: build/docs/html
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

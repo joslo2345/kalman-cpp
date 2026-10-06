@@ -1,4 +1,4 @@
-foreach(example quickstart_kf quickstart_ekf)
+foreach(example quickstart_kf quickstart_ekf tutorial_cv_tracker tutorial_gps_imu tutorial_attitude)
     add_executable(${example} ${example}.cpp)
     target_link_libraries(${example} PRIVATE kalman::kalman)
     if(COMMAND kalman_configure_target)

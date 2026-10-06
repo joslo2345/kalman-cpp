@@ -7,14 +7,16 @@
 
 namespace kalman {
 
-// Linear Kalman filter with fixed state size N and measurement size M.
-//
-//   predict:  x = F x,   P = F P F^T + Q
-//   update:   y = z - H x,   S = H P H^T + R,   K = P H^T S^-1
-//             x = x + K y,   P = (I - K H) P (I - K H)^T + K R K^T   (Joseph form)
-//
-// The Joseph form keeps P symmetric positive-definite under round-off, which is
-// what lets the filter run for long horizons in single precision.
+/// Linear Kalman filter with fixed state size N and measurement size M.
+///
+/// \verbatim
+///   predict:  x = F x,   P = F P F^T + Q
+///   update:   y = z - H x,   S = H P H^T + R,   K = P H^T S^-1
+///             x = x + K y,   P = (I - K H) P (I - K H)^T + K R K^T   (Joseph form)
+/// \endverbatim
+///
+/// The Joseph form keeps P symmetric positive-definite under round-off, which is
+/// what lets the filter run for long horizons in single precision.
 template <int N, int M, typename Scalar = double>
 class LinearFilter {
     static_assert(N > 0 && M > 0, "state and measurement sizes must be positive");
@@ -40,8 +42,8 @@ public:
         record_prediction();
     }
 
-    // Returns false (and leaves the estimate untouched) if the innovation
-    // covariance is not positive-definite.
+    /// Returns false (and leaves the estimate untouched) if the innovation
+    /// covariance is not positive-definite.
     bool update(const Measurement& z) { return update(z, R_); }
 
     bool update(const Measurement& z, const MeasCov& R) {
@@ -54,11 +56,11 @@ public:
     const State& state() const { return x_; }
     const Cov& covariance() const { return P_; }
 
-    // Normalized innovation squared from the last successful update.
+    /// Normalized innovation squared from the last successful update.
     Scalar nis() const { return nis_; }
     const Measurement& innovation() const { return innovation_; }
 
-    // Mean, covariance and cross-covariance from the last predict(), for smoothing.
+    /// Mean, covariance and cross-covariance from the last predict(), for smoothing.
     const Prediction<N, Scalar>& last_prediction() const { return pred_; }
 
     void set_state(const State& x, const Cov& P) {

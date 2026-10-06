@@ -20,18 +20,18 @@ enum class FusionResult {
     update_failed,  // the filter rejected it (e.g. innovation covariance not PD); ignored
 };
 
-// Fuses asynchronous, multi-rate measurements into one model-based filter
-// (ExtendedKalmanFilter, UnscentedKalmanFilter or SquareRootUnscentedKalmanFilter).
-//
-// Each add() may use a different measurement model and size. Measurements are
-// processed in timestamp order. One that arrives late (but within `horizon`
-// seconds of the newest) is handled exactly: the engine rewinds to a snapshot
-// taken just before its timestamp, inserts it, and replays the later ones, so
-// the result equals in-order processing. Measurements with equal timestamps
-// are applied in arrival order.
-//
-// Measurements already in the buffer that fail during a replay stay buffered
-// but have no effect.
+/// Fuses asynchronous, multi-rate measurements into one model-based filter
+/// (ExtendedKalmanFilter, UnscentedKalmanFilter or SquareRootUnscentedKalmanFilter).
+///
+/// Each add() may use a different measurement model and size. Measurements are
+/// processed in timestamp order. One that arrives late (but within `horizon`
+/// seconds of the newest) is handled exactly: the engine rewinds to a snapshot
+/// taken just before its timestamp, inserts it, and replays the later ones, so
+/// the result equals in-order processing. Measurements with equal timestamps
+/// are applied in arrival order.
+///
+/// Measurements already in the buffer that fail during a replay stay buffered
+/// but have no effect.
 template <typename Filter, typename Process>
 class AsyncFusion {
 public:
@@ -91,17 +91,17 @@ public:
         return newest ? FusionResult::applied : FusionResult::reordered;
     }
 
-    // Time of the newest processed measurement (or t0).
+    /// Time of the newest processed measurement (or t0).
     double time() const { return current_time_; }
 
-    // The filter at time(), after every buffered measurement.
+    /// The filter at time(), after every buffered measurement.
     const Filter& filter() const { return current_; }
     const State& state() const { return current_.state(); }
     decltype(auto) covariance() const { return current_.covariance(); }
 
-    // A copy of the filter predicted forward to t >= time(); the engine itself is
-    // unchanged. Throws std::invalid_argument for t < time(), or
-    // std::runtime_error if the prediction fails.
+    /// A copy of the filter predicted forward to t >= time(); the engine itself is
+    /// unchanged. Throws std::invalid_argument for t < time(), or
+    /// std::runtime_error if the prediction fails.
     Filter predicted(double t) const {
         if (t < current_time_) throw std::invalid_argument("AsyncFusion::predicted: t is before time()");
         Filter f = current_;
@@ -109,7 +109,7 @@ public:
         return f;
     }
 
-    // Number of measurements still buffered for out-of-sequence handling.
+    /// Number of measurements still buffered for out-of-sequence handling.
     std::size_t buffered() const { return log_.size(); }
 
 private:
@@ -130,8 +130,8 @@ private:
         }
     }
 
-    // Drops entries that are too old to be rewound to; the newest dropped one
-    // becomes the new base snapshot.
+    /// Drops entries that are too old to be rewound to; the newest dropped one
+    /// becomes the new base snapshot.
     void prune() {
         while (!log_.empty() && log_.front().time < current_time_ - horizon_) {
             base_time_ = log_.front().time;

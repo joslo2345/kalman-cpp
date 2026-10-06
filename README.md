@@ -10,11 +10,12 @@
 
 <p align="center">
   <a href="https://github.com/joslo2345/kalman-cpp/actions/workflows/ci.yml"><img src="https://github.com/joslo2345/kalman-cpp/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://joslo2345.github.io/kalman-cpp/"><img src="https://img.shields.io/badge/docs-API_reference-blue" alt="API docs" /></a>
   <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white" alt="C++20" />
   <img src="https://img.shields.io/badge/header--only-yes-success" alt="Header-only" />
   <img src="https://img.shields.io/badge/Eigen-3.4-8A2BE2" alt="Eigen 3.4" />
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" /></a>
-  <img src="https://img.shields.io/badge/tests-65_passing-brightgreen" alt="65 tests passing" />
+  <img src="https://img.shields.io/badge/tests-68_passing-brightgreen" alt="65 tests passing" />
   <img src="https://img.shields.io/badge/coverage-99.7%25_lines-brightgreen" alt="99.7% line coverage" />
 </p>
 
@@ -32,6 +33,8 @@
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#testing"><strong>Testing</strong></a> ·
   <a href="#roadmap"><strong>Roadmap</strong></a> ·
+  <a href="https://joslo2345.github.io/kalman-cpp/"><strong>API Docs</strong></a> ·
+  <a href="./docs/tutorials/01-constant-velocity-tracker.md"><strong>Tutorials</strong></a> ·
   <a href="./kalman-cpp-repo-guide.md"><strong>Design Guide</strong></a>
 </p>
 
@@ -72,8 +75,12 @@ The compiler checks matrix dimensions. You write a nonlinear model once, and its
     <td valign="top"><strong>CI</strong>: green on Linux GCC/Clang, macOS AppleClang and Windows MSVC, plus sanitizers, clang-tidy, coverage and an OpenCV comparison job. <a href="https://github.com/joslo2345/kalman-cpp/actions">Actions →</a></td>
   </tr>
   <tr>
-    <td align="right" valign="top"><img src="https://img.shields.io/badge/Steps_10–11-planned-6c757d?style=flat-square" alt="planned" /></td>
-    <td valign="top"><strong>Docs and packaging</strong>: Doxygen, tutorials, vcpkg/Conan, and a ROS 2 example. <a href="#roadmap">Roadmap →</a></td>
+    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_10-done-28a745?style=flat-square" alt="done" /></td>
+    <td valign="top"><strong>Documentation</strong>: an <a href="https://joslo2345.github.io/kalman-cpp/">API reference</a> built by Doxygen, and three tested tutorials: a <a href="./docs/tutorials/01-constant-velocity-tracker.md">constant-velocity tracker</a>, <a href="./docs/tutorials/02-gps-imu-fusion.md">GPS + IMU fusion</a> and <a href="./docs/tutorials/03-attitude-estimation.md">attitude estimation</a></td>
+  </tr>
+  <tr>
+    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_11-in_progress-007bff?style=flat-square" alt="in progress" /></td>
+    <td valign="top"><strong>Packaging</strong>: semantic-versioned releases, vcpkg and Conan recipes, and a ROS 2 example. <a href="#roadmap">Roadmap →</a></td>
   </tr>
 </table>
 
@@ -237,11 +244,13 @@ ekf.predict(ConstantVelocity{}, dt, Q);
 ekf.update(RangeBearing{}, z, R);  // no hand-written Jacobians
 ```
 
+**Learn by example:** three [tutorials](./docs/tutorials/01-constant-velocity-tracker.md), each backed by a program that runs as a test. The full API is in the [API reference](https://joslo2345.github.io/kalman-cpp/).
+
 **Build from source and run the tests:**
 
 ```bash
 cmake -B build && cmake --build build
-ctest --test-dir build                 # 65 tests; comparison tests too if OpenCV is installed
+ctest --test-dir build                 # 68 tests; comparison tests too if OpenCV is installed
 ./build/examples/quickstart_ekf
 ```
 
@@ -322,7 +331,6 @@ flowchart LR
 |---|---|
 | **Speed regression gate** | Fail CI when a release is more than 10% slower than the last one, once there is a release to compare against. |
 | **Close the small-problem gap** | Recover the 1.5× against mherb/kalman on 2–4-state filters without giving up the Joseph form. |
-| **Documentation** | Doxygen API reference, plus tutorials for a constant-velocity tracker, GPS+IMU fusion and attitude estimation. |
 | **Packaging** | Semantic-versioned releases, vcpkg and Conan Center ports, and a ROS 2 example package. |
 | **Sister implementations** | C, Python and Rust versions that read the same frozen scenarios. |
 
