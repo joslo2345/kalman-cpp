@@ -81,8 +81,15 @@ int main() {
         const double t = i * 1.0;
         readings.push_back({t, t + gps_latency, true, position(t) + noise2(gps_sigma)});
     }
-    std::stable_sort(readings.begin(), readings.end(),
-                     [](const Reading& a, const Reading& b) { return a.arrival < b.arrival; });
+    // std::sort with a full tie-break (arrival, then measurement time, then
+    // sensor) gives the same order on every standard library. (std::stable_sort
+    // would also work, but MSVC's temporary buffer rejects the 16-byte-aligned
+    // Eigen vector inside Reading.)
+    std::sort(readings.begin(), readings.end(), [](const Reading& a, const Reading& b) {
+        if (a.arrival != b.arrival) return a.arrival < b.arrival;
+        if (a.stamp != b.stamp) return a.stamp < b.stamp;
+        return a.gps < b.gps;
+    });
 
     // Start near the first GPS fix with a wide prior.
     Eigen::Matrix<double, 6, 1> x0 = Eigen::Matrix<double, 6, 1>::Zero();
