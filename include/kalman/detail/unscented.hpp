@@ -110,9 +110,20 @@ bool cholupdate(Eigen::Matrix<Scalar, K, K>& L, Eigen::Matrix<Scalar, K, 1> v, S
 // Lower Cholesky factor of  sum_{i>=1} wc_i d_i d_i^T + B B^T + wc_0 d_0 d_0^T
 // via one QR decomposition plus a rank-1 update for the central point, which
 // may carry a negative weight. Requires wc_i > 0 for i >= 1.
-template <int K, int L, int B, typename Scalar>
-bool sqrt_covariance(const Eigen::Matrix<Scalar, K, L>& D, const Eigen::Matrix<Scalar, L, 1>& wc,
-                     const Eigen::Matrix<Scalar, K, B>& sqrt_noise, Eigen::Matrix<Scalar, K, K>& S) {
+//
+// Sizes are read from the argument types rather than deduced through
+// Eigen::Matrix<Scalar, K, L>: for K = 1 that is a row vector whose default
+// storage option depends on K and L, and MSVC fails to deduce through it.
+template <typename DMat, typename WVec, typename NoiseMat, typename SMat>
+bool sqrt_covariance(const DMat& D, const WVec& wc, const NoiseMat& sqrt_noise, SMat& S) {
+    using Scalar = typename DMat::Scalar;
+    constexpr int K = DMat::RowsAtCompileTime;
+    constexpr int L = DMat::ColsAtCompileTime;
+    constexpr int B = NoiseMat::ColsAtCompileTime;
+    static_assert(WVec::RowsAtCompileTime == L && SMat::RowsAtCompileTime == K && SMat::ColsAtCompileTime == K &&
+                      NoiseMat::RowsAtCompileTime == K,
+                  "sqrt_covariance: inconsistent sizes");
+
     Eigen::Matrix<Scalar, L - 1 + B, K> A;
     A.topRows(L - 1) = (D.rightCols(L - 1) * std::sqrt(wc(1))).transpose();
     A.bottomRows(B) = sqrt_noise.transpose();
@@ -126,7 +137,7 @@ bool sqrt_covariance(const Eigen::Matrix<Scalar, K, L>& D, const Eigen::Matrix<S
 
     if (wc(0) != Scalar(0)) {
         const Eigen::Matrix<Scalar, K, 1> v = std::sqrt(std::abs(wc(0))) * D.col(0);
-        if (!cholupdate(S, v, wc(0) > Scalar(0) ? Scalar(1) : Scalar(-1))) return false;
+        if (!cholupdate<K, Scalar>(S, v, wc(0) > Scalar(0) ? Scalar(1) : Scalar(-1))) return false;
     }
     return (S.diagonal().array() > Scalar(0)).all();
 }
