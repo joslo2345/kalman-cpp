@@ -8,3 +8,7 @@ build-*/
 compile_commands.json
 results/gbench.json
 .venv/
+
+# Conan test_package outputs
+test_package/build/
+CMakeUserPresets.json

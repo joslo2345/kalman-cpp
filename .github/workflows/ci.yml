@@ -146,6 +146,56 @@ jobs:
           cmake --build build-consumer
           ./build-consumer/consumer
 
+  # The Conan recipe, against ConanCenter's Eigen.
+  conan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "conan>=2.0,<3"
+      - run: conan profile detect
+      - name: Create the package and run test_package
+        run: conan create . --build=missing -s compiler.cppstd=20
+
+  # The ROS 2 example package, built with colcon and smoke-tested end to end.
+  ros2:
+    runs-on: ubuntu-24.04
+    container: ros:jazzy-ros-base
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kalman-cpp against the ROS Eigen
+        run: |
+          apt-get update && apt-get install -y libeigen3-dev ros-jazzy-nav-msgs
+          cmake -S . -B build -DKALMAN_BUILD_TESTS=OFF -DKALMAN_BUILD_EXAMPLES=OFF -DKALMAN_FETCH_EIGEN=OFF
+          cmake --install build
+      - name: Build kalman_tracker
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          mkdir -p ws/src && cp -r ros2/kalman_tracker ws/src/
+          cd ws && colcon build --packages-select kalman_tracker --event-handlers console_direct+
+      - name: Smoke test (out-of-order measurements in, an estimate out)
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source ws/install/setup.bash
+          ros2 run kalman_tracker tracker_node &
+          NODE=$!
+          timeout 30 ros2 topic echo --once /estimate nav_msgs/msg/Odometry > estimate.txt &
+          ECHO=$!
+          sleep 3
+          for stamp in 1 3 2; do  # the third message is older than the second
+            ros2 topic pub --once /measurement geometry_msgs/msg/PointStamped \
+              "{header: {stamp: {sec: $stamp}, frame_id: map}, point: {x: $stamp.0, y: 0.5, z: 0.0}}"
+          done
+          wait $ECHO
+          kill $NODE
+          cat estimate.txt
+          grep -q "frame_id: map" estimate.txt
+
   # Comparison tests against OpenCV, the benchmark build, and the comparison
   # report (guide Steps 7-8). Published benchmark numbers come from a
   # dedicated machine (scripts/run_benchmarks.sh), not from shared runners.

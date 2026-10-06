@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>kalman_tracker</name>
+  <version>0.1.0</version>
+  <description>Example ROS 2 node using kalman-cpp: tracks a point from timestamped, possibly out-of-order measurements.</description>
+  <maintainer email="joslo2345contact@gmail.com">Jose Lopez</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/joslo2345/kalman-cpp</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>eigen</depend>
+  <!-- kalman-cpp itself is found with find_package(kalman); install it first (see README.md). -->
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
