@@ -14,8 +14,10 @@ add_executable(unit_tests
     unit/test_smoother.cpp
     unit/test_fusion.cpp
     unit/test_error_state.cpp
-    unit/test_diagnostics.cpp)
+    unit/test_diagnostics.cpp
+    unit/test_vectors.cpp)
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(unit_tests PRIVATE KALMAN_VECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/vectors")
 target_link_libraries(unit_tests PRIVATE kalman::kalman Catch2::Catch2WithMain)
 catch_discover_tests(unit_tests)
 
