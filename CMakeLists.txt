@@ -47,7 +47,12 @@ export(EXPORT kalmanTargets
     FILE ${CMAKE_CURRENT_BINARY_DIR}/kalmanTargets.cmake)
 
 option(KALMAN_BUILD_TESTS "Build tests" ON)
+option(KALMAN_BUILD_BENCH "Build benchmarks (needs OpenCV and the mherb/kalman submodule)" OFF)
 if(KALMAN_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(KALMAN_BUILD_BENCH)
+    add_subdirectory(bench)
 endif()

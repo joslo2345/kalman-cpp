@@ -10,5 +10,6 @@
 #include "kalman/prediction.hpp"
 #include "kalman/smoother.hpp"
 #include "kalman/so3.hpp"
+#include "kalman/sqrt_linear_filter.hpp"
 #include "kalman/sqrt_ukf.hpp"
 #include "kalman/ukf.hpp"
