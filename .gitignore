@@ -1,0 +1,9 @@
+build/
+build-*/
+.cache/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+compile_commands.json
+results/gbench.json
