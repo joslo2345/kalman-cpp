@@ -35,8 +35,12 @@ Done so far:
   - Models and states must therefore be templated on the scalar; there is no analytic-Jacobian path.
   - `so3::exp` and `so3::log` switch to Taylor expansions below about 1e-5 rad, so jet derivatives stay exact at the expansion point δ=0.
   - The ESKF doesn't fill `Prediction`, so the smoother doesn't support it. `AsyncFusion` doesn't fit it well either, since the gyro is a per-step control input carried by the process model.
+- Step 7 (consistency): `kalman::diagnostics` in `diagnostics.hpp`.
+  - `nees`/`nis` helpers, plus exact `chi2_cdf`/`chi2_quantile` from the regularized incomplete gamma function. They are accurate up to dof 5e4 and beyond.
+  - `average_bounds(dof, runs, confidence)` gives the interval for a Monte Carlo mean.
+  - `ConsistencyCheck` accumulates per-step NEES/NIS across runs and reports `fraction_inside()`.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Step 6 is complete. `diagnostics.hpp` is still a stub. The next step is Step 7: reusable NIS/NEES consistency diagnostics and the Monte Carlo consistency tests. The OpenCV comparison tests need OpenCV, which isn't installed.
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Steps 5–6 are complete, and so is Step 7 except the OpenCV comparison tests (`tests/comparison/`). Those, and the Step 8 benchmarks, need OpenCV, which isn't installed. Step 9 (CI) doesn't depend on it.
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
