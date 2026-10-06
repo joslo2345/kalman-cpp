@@ -79,8 +79,8 @@ The compiler checks matrix dimensions. You write a nonlinear model once, and its
     <td valign="top"><strong>Documentation</strong>: an <a href="https://joslo2345.github.io/kalman-cpp/">API reference</a> built by Doxygen, and three tested tutorials: a <a href="./docs/tutorials/01-constant-velocity-tracker.md">constant-velocity tracker</a>, <a href="./docs/tutorials/02-gps-imu-fusion.md">GPS + IMU fusion</a> and <a href="./docs/tutorials/03-attitude-estimation.md">attitude estimation</a></td>
   </tr>
   <tr>
-    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_11-in_progress-007bff?style=flat-square" alt="in progress" /></td>
-    <td valign="top"><strong>Packaging</strong>: semantic-versioned releases, vcpkg and Conan recipes, and a ROS 2 example. <a href="#roadmap">Roadmap →</a></td>
+    <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_11-done-28a745?style=flat-square" alt="done" /></td>
+    <td valign="top"><strong>Packaging</strong>: <a href="./CHANGELOG.md">v0.1.0</a>, a CMake package, a Conan recipe, a vcpkg port, and a <a href="./ros2/kalman_tracker">ROS 2 example</a>, all tested in CI. Next: submitting to ConanCenter and the vcpkg registry.</td>
   </tr>
 </table>
 
@@ -206,12 +206,45 @@ Reproduce everything with one command: `./scripts/run_benchmarks.sh`. It writes 
 
 ## 🚀 Quick Start
 
-**Requirements:** CMake ≥ 3.20 and a C++20 compiler. Eigen 3.4 is fetched automatically if you build from source.
+**Requirements:** CMake ≥ 3.20, a C++20 compiler and Eigen 3.4. An installed Eigen 3.4 is used if there is one; otherwise it is downloaded (`-DKALMAN_FETCH_EIGEN=OFF` turns that off).
+
+<details open>
+<summary><strong>Installation</strong>: CMake, Conan, vcpkg or ROS 2</summary>
+
+**CMake `FetchContent`.** Tests and examples are skipped when kalman-cpp isn't the top-level project.
 
 ```cmake
-add_subdirectory(kalman-cpp)          # or: find_package(kalman) after cmake --install
+include(FetchContent)
+FetchContent_Declare(kalman GIT_REPOSITORY https://github.com/joslo2345/kalman-cpp.git GIT_TAG v0.1.0)
+FetchContent_MakeAvailable(kalman)
 target_link_libraries(my_app PRIVATE kalman::kalman)
 ```
+
+**Installed CMake package:**
+
+```bash
+cmake -B build -DKALMAN_BUILD_TESTS=OFF && cmake --install build --prefix /your/prefix
+```
+```cmake
+find_package(kalman 0.1 REQUIRED)   # with CMAKE_PREFIX_PATH=/your/prefix
+target_link_libraries(my_app PRIVATE kalman::kalman)
+```
+
+**Conan.** The recipe is in this repo, and its `test_package` runs in CI:
+
+```bash
+conan create . -s compiler.cppstd=20
+```
+
+**vcpkg.** Use the overlay port in [`ports/`](./ports/kalman-cpp):
+
+```bash
+vcpkg install kalman-cpp --overlay-ports=ports
+```
+
+**ROS 2.** See [`ros2/kalman_tracker`](./ros2/kalman_tracker). The example node fuses timestamped measurements, which may arrive out of order, and is built and smoke-tested on ROS 2 Jazzy in CI.
+
+</details>
 
 **A linear filter.** Dimensions are part of the type ([`examples/quickstart_kf.cpp`](./examples/quickstart_kf.cpp)):
 
@@ -329,9 +362,10 @@ flowchart LR
 
 | Item | Description |
 |---|---|
-| **Speed regression gate** | Fail CI when a release is more than 10% slower than the last one, once there is a release to compare against. |
+| **Speed regression gate** | Fail CI when a release is more than 10% slower than the last one, starting from the v0.1.0 baseline. |
 | **Close the small-problem gap** | Recover the 1.5× against mherb/kalman on 2–4-state filters without giving up the Joseph form. |
-| **Packaging** | Semantic-versioned releases, vcpkg and Conan Center ports, and a ROS 2 example package. |
+| **Package registries** | Submit the Conan recipe to ConanCenter and the port to the vcpkg registry. |
+| **Smoother and fusion for the error-state filter** | `ErrorStateKalmanFilter` works with neither `RtsSmoother` nor `AsyncFusion` yet. |
 | **Sister implementations** | C, Python and Rust versions that read the same frozen scenarios. |
 
 ## 🤝 Contributing

@@ -48,7 +48,21 @@ The KF and EKF share `detail::joseph_update`, which uses an LLT solve and return
 - **Comparison job:** it uses Ubuntu's OpenCV 4.6 plus contrib. Frozen-vector results match macOS exactly.
 - **Speed regression gate:** the guide's ">10% slower than the last release" check isn't implemented, because there is no release baseline yet.
 
-Step 10 (documentation) is done. The next step is Step 11: packaging.
+Steps 10 (documentation) and 11 (packaging) are done. v0.1.0 is the first release; see `CHANGELOG.md`.
+
+Packaging notes (Step 11):
+- **Version:** `include/kalman/version.hpp` is the single source. The top-level CMakeLists, `conanfile.py` and the test read it, so bump it there, then update `CHANGELOG.md` and `ports/kalman-cpp/vcpkg.json`.
+- **Eigen lookup:** `find_package(Eigen3 3.4 ... NO_CMAKE_PACKAGE_REGISTRY)`, falling back to downloading it when `KALMAN_FETCH_EIGEN=ON`.
+  - The registry is skipped because Eigen's build trees register themselves there, which once made a fresh build silently use another build directory's Eigen.
+  - Eigen 5's version rule rejects a 3.4 request, so Homebrew's Eigen 5 is never picked up.
+- **Top-level defaults:** tests and examples default to ON only when this is the top-level project, so FetchContent consumers don't build them.
+- **CI packaging jobs:**
+  - `install`: system Eigen, then `tests/install` as a consumer.
+  - `conan`: `conan create` with `test_package/`.
+  - `ros2`: the `ros:jazzy-ros-base` container builds `ros2/kalman_tracker` with colcon and smoke-tests it with out-of-order stamps.
+- **vcpkg overlay port:** `ports/kalman-cpp`. Its SHA512 is for the GitHub tarball of the `v<version>` tag; recompute it on every release.
+- **Local Conan:** set `CONAN_HOME` to a scratch directory and pass `-c tools.apple:sdk_path=<MacOSX26.5.sdk>` because of the SDK quirk.
+- **MSVC and aligned Eigen types:** `std::stable_sort` (and anything else that uses `aligned_storage`) rejects 16-byte-aligned Eigen members in a struct. Avoid it in examples rather than defining `_ENABLE_EXTENDED_ALIGNED_STORAGE`.
 - **API reference:** built by Doxygen 1.9+ with the doxygen-awesome theme v2.5.0 (v2.3.x had unreadable inline code in dark mode with doxygen 1.18). Build it with `cmake -B build -DKALMAN_BUILD_DOCS=ON && cmake --build build --target docs`.
 - **Publishing:** `.github/workflows/docs.yml` builds with warnings as errors and deploys to GitHub Pages (https://joslo2345.github.io/kalman-cpp/).
 - **Doc comments:** documentation comments in public headers use `///`. Code samples inside them must be wrapped in `\code`/`\endcode` and formulas in `\verbatim`; otherwise Doxygen parses `<typename T>` as HTML.
