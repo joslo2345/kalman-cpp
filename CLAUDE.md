@@ -27,8 +27,16 @@ Done so far:
   - Equal timestamps are applied in arrival order.
   - Possible results: `applied`, `reordered`, `too_old`, `update_failed`.
   - `predicted(t)` returns a predicted copy and never changes the engine.
+- Step 6.6: `ErrorStateKalmanFilter<S, Scalar>` in `error_state.hpp`, plus `so3.hpp`.
+  - It is generic over a manifold state class template `S<T>` that provides `DoF`, `boxplus`, `boxminus` and `cast<U>()`; see the `ManifoldState` concept.
+  - `kalman::SO3<T>` is a ready-made orientation state with right perturbation (`q ⊞ δ = q ⊗ Exp(δ)`).
+  - Product states, such as `scenarios::AttitudeBias` in the tests, combine their parts block by block.
+  - All three Jacobians come from autodiff through the model and `⊞`/`⊟`: process F, measurement H, and the error-reset G.
+  - Models and states must therefore be templated on the scalar; there is no analytic-Jacobian path.
+  - `so3::exp` and `so3::log` switch to Taylor expansions below about 1e-5 rad, so jet derivatives stay exact at the expansion point δ=0.
+  - The ESKF doesn't fill `Prediction`, so the smoother doesn't support it. `AsyncFusion` doesn't fit it well either, since the gyro is a per-step control input carried by the process model.
 
-The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. `diagnostics.hpp` is still a stub. The next step is Step 6.6: an error-state filter for orientation on SO(3).
+The KF and EKF share `detail::joseph_update`, which uses an LLT solve and returns `false` without touching the state when S isn't positive-definite. Step 6 is complete. `diagnostics.hpp` is still a stub. The next step is Step 7: reusable NIS/NEES consistency diagnostics and the Monte Carlo consistency tests. The OpenCV comparison tests need OpenCV, which isn't installed.
 
 Design decisions that differ from the guide's sketches:
 - **EKF signature:** it is `ExtendedKalmanFilter<N>` rather than `<N, Mz>`.
@@ -48,6 +56,11 @@ Testing notes for the unscented filters:
 - With alpha=1e-3 the central weight is about −1e6, which costs about 6 digits of precision. Tolerances against the exact KF are therefore 1e-5 there and 1e-10 for alpha=1.
 
 The strongest smoother test compares against the exact batch solution of the whole linear-Gaussian problem (inverting the information matrix), including a gap of missing measurements. It needs a full-rank Q, because the constant-velocity Q from `cv_process_noise` is singular.
+
+Testing notes for the error-state filter:
+- Convergence and NEES are insensitive to the reset Jacobian G, which is close to the identity for small corrections.
+- G is pinned down only by the analytic single-update test in `test_error_state.cpp`. It uses a correction of about 0.3 rad and compares against `blockdiag(J_r(δθ), I)`.
+- The ESKF NEES bound is DoF ± 40%, because means over 20-seed blocks ranged from 5.1 to 6.9.
 
 `tests/scenarios/` holds seeded generators that use `std::normal_distribution`. Its output differs between standard libraries, so use the frozen data in `tests/vectors/` for cross-library numbers. Every file in `tests/compile_fail/` must also be listed in the `foreach` in `tests/CMakeLists.txt`. Check that each one fails for the intended reason, not an unrelated error. `kalman-cpp-repo-guide.md` is the source of truth for the planned API, tests, and benchmarks. Read the relevant step there before adding a component.
 
