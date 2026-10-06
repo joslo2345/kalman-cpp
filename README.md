@@ -80,7 +80,7 @@ The compiler checks matrix dimensions. You write a nonlinear model once, and its
   </tr>
   <tr>
     <td align="right" valign="top"><img src="https://img.shields.io/badge/Step_11-done-28a745?style=flat-square" alt="done" /></td>
-    <td valign="top"><strong>Packaging</strong>: <a href="./CHANGELOG.md">v0.1.0</a>, a CMake package, a Conan recipe, a vcpkg port, and a <a href="./ros2/kalman_tracker">ROS 2 example</a>, all tested in CI. Next: submitting to ConanCenter and the vcpkg registry.</td>
+    <td valign="top"><strong>Packaging</strong>: <a href="./CHANGELOG.md">v0.1.0</a>, a CMake package, a Conan recipe, a vcpkg port, and a <a href="./ros2/kalman_tracker">ROS 2 example</a>, all tested in CI. ConanCenter <a href="https://github.com/conan-io/conan-center-index/pull/31118">submission</a> open.</td>
   </tr>
 </table>
 
@@ -364,7 +364,7 @@ flowchart LR
 |---|---|
 | **Speed regression gate** | Fail CI when a release is more than 10% slower than the last one, starting from the v0.1.0 baseline. |
 | **Close the small-problem gap** | Recover the 1.5× against mherb/kalman on 2–4-state filters without giving up the Joseph form. |
-| **Package registries** | Submit the Conan recipe to ConanCenter and the port to the vcpkg registry. |
+| **Package registries** | ConanCenter: [recipe submitted](https://github.com/conan-io/conan-center-index/pull/31118) as `joslo2345-kalman-cpp`. vcpkg: the registry requires 6 months of public history, so the port (`joslo2345-kalman-cpp`) can be submitted from April 2027. Until then use the overlay port in `ports/`. |
 | **Smoother and fusion for the error-state filter** | `ErrorStateKalmanFilter` works with neither `RtsSmoother` nor `AsyncFusion` yet. |
 | **Sister implementations** | C, Python and Rust versions that read the same frozen scenarios. |
 

@@ -64,6 +64,12 @@ Packaging notes (Step 11):
 - **vcpkg overlay port:** `ports/kalman-cpp`. Its SHA512 is for the GitHub tarball of the `v<version>` tag; recompute it on every release with `vcpkg hash <tarball>`.
   - The port builds the released tag, not the current commit. The CI `vcpkg` job installs it and builds `tests/install` through the vcpkg toolchain.
   - vcpkg's `eigen3` is 5.x.
+- **Registries:**
+  - **ConanCenter:** PR conan-io/conan-center-index#31118, from the fork joslo2345/conan-center-index, branch `joslo2345-kalman-cpp-0.1.0`.
+    - The name is owner-prefixed (`joslo2345-kalman-cpp`) because `kalman-cpp` collides with hmartiro/kalman-cpp.
+    - The recipe there downloads the release tarball, unlike the in-repo `conanfile.py`, which exports local sources.
+    - The user must sign the CLA, and maintainers must approve CI for a first-time contributor.
+  - **vcpkg:** new ports need 6 months of public history, so submit no earlier than 2027-04-06, as `joslo2345-kalman-cpp`, following the PR template checklist.
 - **Releases:**
   - Tag `v<version>` only on a commit whose CI and Docs runs are green.
   - Publish with `gh release create`, using the CHANGELOG section as the notes.
